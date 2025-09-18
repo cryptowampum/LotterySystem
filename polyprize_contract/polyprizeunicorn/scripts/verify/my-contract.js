@@ -10,7 +10,7 @@ async function main() {
   console.log("Verifying contract.");
   await verify(
     contractAddress,
-    "contracts/Contract.sol:MyContract",
+    "contracts/PolyPrizeUnicorn.sol:PolyPrizeUnicorn",
     constructorArgs
   );
 }

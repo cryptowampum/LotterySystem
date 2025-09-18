@@ -1,0 +1,22 @@
+// ⚠️ NOTE: This metadata is now generated ON-CHAIN by the contract
+// No external API or hosting required - shown here for reference only
+//
+// The contract automatically generates this JSON structure for each token
+// and returns it as a data URI from the tokenURI() function
+
+{
+  "name": "Unicorn.eth PolyPrize #{{TOKEN_ID}}",
+  "description": "Soulbound NFT, minted to wallet {{MINTER_ADDRESS}} for the PolyPrize drawing.",
+  "image": "{{BASE_IMAGE_URI}}",
+  "attributes": [
+    {
+      "trait_type": "Wallet",
+      "value": "{{MINTER_ADDRESS}}"
+    },
+    {
+      "trait_type": "Drawing Date", 
+      "display_type": "date",
+      "value": "{{DRAWING_TIMESTAMP}}"
+    }
+  ]
+}

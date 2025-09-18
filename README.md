@@ -50,79 +50,54 @@ npx thirdweb create contract
 
 ### Contract Constructor Parameters
 ```
-Name: "Unicorn.eth PolyPrize Collection"
-Symbol: "UPPC"
-Royalty Recipient: YOUR_WALLET_ADDRESS
-Royalty BPS: 500 (5%)
-Base URI: "https://your-domain.com/metadata/"
-Drawing Date: 1704067200 (Unix timestamp - e.g., Jan 1, 2024 00:00:00 UTC)
+Base Image URI: "https://your-domain.com/unicorn-image.png" or "ipfs://QmYourImageHash"
+Drawing Date: 1735689599 (Unix timestamp - e.g., Dec 31, 2024 23:59:59 UTC)
 ```
+
+**Important Notes:**
+- **Base Image URI**: Single image used for all NFTs (IPFS recommended for permanence)
+- **Drawing Date**: Unix timestamp when minting ends
+- **Max Supply**: Hard-coded to 10,000 NFTs in contract
+- **On-Chain Metadata**: All metadata generated on-chain, no external API needed
 
 **Setting Drawing Date:**
 ```javascript
 // Calculate Unix timestamp for your drawing date
-const drawingDate = new Date('2025-09-29T23:59:59Z').getTime() / 1000;
+const drawingDate = new Date('2024-12-31T23:59:59Z').getTime() / 1000;
 console.log(drawingDate); // Use this value in constructor
 ```
 
-## Step 2: Metadata Hosting
+## Step 2: Image Hosting (Simplified)
 
-### Option A: IPFS (Decentralized)
+### Why Only One Image?
+The updated contract uses a **single image for all NFTs**, making deployment much simpler:
+- No complex metadata API needed
+- All metadata generated on-chain
+- Reduces hosting costs and complexity
+- Ensures permanent availability
+
+### Option A: IPFS (Recommended for Permanence)
 ```bash
-# Install IPFS CLI or use Pinata/Infura
-# Upload your unicorn image first
-# Upload metadata JSON with image IPFS hash
+# Upload your unicorn image to IPFS
+# Use Pinata, Infura, or local IPFS node
+# Example result: "ipfs://QmYourUnicornImageHash"
 ```
 
 ### Option B: Traditional Web Hosting
-Create an API endpoint that returns metadata based on query parameters:
-```
-GET /metadata/?minter=0x123...&tokenId=1
-```
-
-### Metadata API Implementation (Node.js/Express)
-```javascript
-app.get('/metadata/', (req, res) => {
-  const { minter, tokenId, drawingDate } = req.query;
-  
-  const drawingDateFormatted = new Date(parseInt(drawingDate) * 1000).toISOString();
-  
-  const metadata = {
-    name: `Unicorn.eth PolyPrize #${tokenId}`,
-    description: "A soul-bound NFT from the Unicorn.eth PolyPrize Collection...",
-    image: "https://your-domain.com/unicorn-polyprize.png",
-    attributes: [
-      {
-        trait_type: "Minter Address",
-        value: minter
-      },
-      {
-        trait_type: "Token ID", 
-        value: tokenId
-      },
-      {
-        trait_type: "Drawing Date",
-        value: drawingDateFormatted
-      },
-      {
-        trait_type: "Drawing Timestamp",
-        value: drawingDate
-      }
-      // ... other attributes
-    ],
-    properties: {
-      soul_bound: true,
-      minter: minter,
-      drawing_date: drawingDateFormatted,
-      drawing_timestamp: drawingDate
-    }
-  };
-  
-  res.json(metadata);
-});
+```bash
+# Upload single image to your web server
+# Example: "https://yourdomain.com/unicorn-polyprize.png"
+# Ensure high availability and CDN if possible
 ```
 
-## Step 3: Frontend Configuration
+### No Metadata API Required! 
+✅ **Simplified**: The contract generates all metadata on-chain including:
+- Token name and description
+- Minter wallet address as trait
+- Drawing date as trait
+- Soulbound status
+
+## Step 3: Frontend Configuration (Updated)
 
 ### 1. Environment Variables
 Create `.env.local`:
@@ -175,36 +150,39 @@ npm run build
    # Upload build folder to IPFS
    ```
 
-## Step 5: Drawing Date Management
+## Step 5: Admin Functions & Management
 
-### Setting Drawing Date During Deployment
-The drawing date is set during contract deployment and determines when minting ends.
+### Emergency Controls
+The contract includes several admin-only functions for managing the lottery:
 
-### Updating Drawing Date (Post-Deployment)
 ```javascript
-// Only contract owner can extend the drawing date
-// Cannot set to past date or reduce existing date
-const newDrawingDate = Math.floor(new Date('2025-01-15T23:59:59Z').getTime() / 1000);
+// Pause minting (emergency stop)
+await contract.call("pause");
+
+// Resume minting
+await contract.call("unpause");
+
+// Extend drawing date (cannot reduce)
+const newDrawingDate = Math.floor(new Date('2025-02-01T23:59:59Z').getTime() / 1000);
 await contract.call("setDrawingDate", [newDrawingDate]);
+
+// Update image URI if needed
+await contract.call("updateBaseURI", ["ipfs://QmNewImageHash"]);
+
+// Withdraw any ETH sent to contract
+await contract.call("withdrawETH");
 ```
 
-### Important Drawing Date Rules
-1. **Extension Only**: Can only extend the drawing date, never reduce it
-2. **Future Dates**: New date must be in the future
-3. **Owner Only**: Only contract owner can modify drawing date
-4. **Automatic Cutoff**: Minting automatically stops at drawing date
+### Max Supply Management
+- **Hard Cap**: 10,000 NFTs maximum (cannot be changed)
+- **Automatic Stop**: Minting stops when max supply reached
+- **Progress Tracking**: Frontend shows supply progress
 
-### Checking Drawing Status
-```javascript
-// Check if minting is still active
-const isActive = await contract.call("isMintingActive");
-
-// Get time remaining until drawing
-const timeLeft = await contract.call("timeUntilDrawing");
-
-// Get drawing date timestamp
-const drawingDate = await contract.call("drawingDate");
-```
+### Drawing Date Rules
+1. **Extension Only**: Can only extend, never reduce drawing date
+2. **Future Only**: New date must be in the future  
+3. **Owner Only**: Only contract owner can modify
+4. **Event Logging**: All changes logged on-chain
 
 ## Step 6: Contract Verification & Security
 
@@ -290,16 +268,19 @@ ILotterySystem public lotteryContract;
 ## Testing Checklist
 
 ### Contract Testing
-- [ ] Deploy to Mumbai testnet
+- [ ] Deploy to Mumbai testnet with proper image URI and drawing date
 - [ ] Test minting process before drawing date
-- [ ] Test minting rejection after drawing date
-- [ ] Verify drawing date extension (owner only)
+- [ ] Test minting rejection after drawing date  
+- [ ] Test max supply constraint (if testing with lower limit)
+- [ ] Test pause/unpause functionality (owner only)
+- [ ] Test drawing date extension (owner only)
 - [ ] Verify drawing date cannot be reduced
-- [ ] Test countdown timer functionality
-- [ ] Verify transfer restrictions
-- [ ] Check metadata generation with drawing date
+- [ ] Test image URI updates (owner only)
+- [ ] Test ETH withdrawal (owner only)
+- [ ] Verify on-chain metadata generation
+- [ ] Test soulbound transfer restrictions
 - [ ] Test burning functionality
-- [ ] Verify ownership queries
+- [ ] Verify events are emitted correctly
 
 ### Frontend Testing
 - [ ] Wallet connection
