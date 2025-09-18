@@ -1,0 +1,45 @@
+{
+  "name": "Unicorn.eth PolyPrize #{{TOKEN_ID}}",
+  "description": "A soul-bound NFT from the Unicorn.eth PolyPrize Collection. This NFT is permanently bound to the wallet that minted it and cannot be transferred. It represents participation in the PolyPrize lottery system.",
+  "image": "https://github.com/unicorn-eth/resources/blob/main/UnicornPolyPrize.jpg?raw=trueg",
+  "external_url": "https://your-domain.com/token/{{TOKEN_ID}}",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "Unicorn.eth PolyPrize"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Soul-Bound"
+    },
+    {
+      "trait_type": "Network",
+      "value": "Polygon"
+    },
+    {
+      "trait_type": "Minter Address",
+      "value": "{{MINTER_ADDRESS}}"
+    },
+    {
+      "trait_type": "Drawing Date",
+      "value": "{{DRAWING_DATE}}"
+    },
+    {
+      "trait_type": "Drawing Timestamp",
+      "value": "{{DRAWING_TIMESTAMP}}"
+    },
+    {
+      "trait_type": "Token ID",
+      "value": "{{TOKEN_ID}}"
+    }
+  ],
+  "properties": {
+    "soul_bound": true,
+    "transferable": false,
+    "minter": "{{MINTER_ADDRESS}}",
+    "mint_date": "{{MINT_DATE}}",
+    "drawing_date": "{{DRAWING_DATE}}",
+    "drawing_timestamp": "{{DRAWING_TIMESTAMP}}",
+    "contract_address": "{{CONTRACT_ADDRESS}}"
+  }
+}
