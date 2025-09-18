@@ -53,3 +53,9 @@ yarn release
 ## Join our Discord!
 
 For any questions, suggestions, join our discord at [https://discord.gg/thirdweb](https://discord.gg/thirdweb).
+
+
+Deployed to Polygon Avoy 
+at 0xaba2d513bda0ca8c0a3fbaeb0ba071eda492f1c8 
+
+Deployed to Polygon Avoy  0xabA2D513bDA0Ca8C0a3fbaeB0bA071eda492F1C8
