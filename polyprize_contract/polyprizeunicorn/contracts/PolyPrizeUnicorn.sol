@@ -38,7 +38,7 @@ contract PolyPrizeUnicorn is ERC721, ERC721Enumerable, Ownable {
         string memory _baseAnimationURI,  // The IPFS MP4 video URI
         uint256 _drawingDate              // Unix timestamp
     )
-        ERC721("Unicorn.eth PolyPrize Collection", "UNICORN")
+        ERC721("Unicorn.eth PolyPrize Collection", "UUPC")
         Ownable(msg.sender)  // Pass initial owner to Ownable constructor
     {
         require(bytes(_baseImageURI).length > 0, "Base image URI cannot be empty");
