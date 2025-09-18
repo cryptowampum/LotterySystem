@@ -1,49 +1,18 @@
-require("@matterlabs/hardhat-zksync-solc");
-require("@matterlabs/hardhat-zksync-verify");
+require("@nomicfoundation/hardhat-ethers");
+require("dotenv").config();
 
-
-/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  zksolc: {
-    version: "1.4.1",
-    compilerSource: "binary",
-    settings: {
-      optimizer: {
-        enabled: true,
-      },
-    },
-  },
+  solidity: "0.8.17",
   networks: {
-    zkSyncSepoliaTestnet: {
-      url: "https://sepolia.era.zksync.dev",
-      ethNetwork: "sepolia",
-      zksync: true,
-      chainId: 300,
-      verifyURL:
-        "https://explorer.sepolia.era.zksync.dev/contract_verification",
+    amoy: {
+      url: "https://rpc-amoy.polygon.technology/",
+      chainId: 80002,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
     },
-    zkSyncMainnet: {
-      url: "https://mainnet.era.zksync.io",
-      ethNetwork: "mainnet",
-      zksync: true,
-      chainId: 324,
-      verifyURL:
-        "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
-    },
-  },
-  paths: {
-    artifacts: "./artifacts-zk",
-    cache: "./cache-zk",
-    sources: "./contracts",
-    tests: "./test",
-  },
-  solidity: {
-    version: "0.8.23",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-    },
-  },
+    polygon: {
+      url: "https://polygon-rpc.com/",
+      chainId: 137,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    }
+  }
 };

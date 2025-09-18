@@ -6,8 +6,6 @@
     "publish": "npx thirdweb@latest publish"
   },
   "devDependencies": {
-    "@matterlabs/hardhat-zksync-solc": "^1.1.14",
-    "@matterlabs/hardhat-zksync-verify": "^1.2.2",
     "hardhat": "^2.19.1"
   },
   "dependencies": {
