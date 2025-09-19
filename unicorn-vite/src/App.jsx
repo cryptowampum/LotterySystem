@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ThirdwebProvider, 
   useActiveAccount, 
+  useActiveWallet,
   useReadContract,
   useSendTransaction,
   AutoConnect
@@ -13,20 +14,30 @@ import './index.css';
 
 // Create ThirdWeb client with error handling
 const clientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID;
+const factoryAddress = import.meta.env.VITE_THIRDWEB_FACTORY_ADDRESS;
+
+const MINT_COOLDOWN = 8000; // 8 seconds
 
 if (!clientId) {
   console.error("VITE_THIRDWEB_CLIENT_ID is not set in environment variables");
+}
+if (!factoryAddress) {
+  console.error("VITE_THIRDWEB_FACTORY_ADDRESS is not set in environment variables");
 }
 
 const client = createThirdwebClient({
   clientId: clientId || "",
 });
 
+const isValidAddress = (address) => {
+  return address && /^0x[a-fA-F0-9]{40}$/.test(address);
+};
+
 // Configure wallets with proper factory address for AutoConnect
 const supportedWallets = [
   inAppWallet({
     smartAccount: {
-      factoryAddress: "0xD771615c873ba5a2149D5312448cE01D677Ee48A", // Unicorn factory address
+      factoryAddress: factoryAddress || "0xD771615c873ba5a2149D5312448cE01D677Ee48A", // Unicorn factory address
       chain: polygon,
       gasless: true,
       sponsorGas: true,
@@ -35,7 +46,6 @@ const supportedWallets = [
 ];
 
 console.log("ThirdWeb Client ID:", clientId ? `${clientId.slice(0, 8)}...` : "NOT SET");
-console.log("Factory Address: 0xD771615c873ba5a2149D5312448cE01D677Ee48A");
 console.log("Supported Wallets:", supportedWallets.length);
 
 // Get contract
@@ -44,6 +54,11 @@ const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 if (!CONTRACT_ADDRESS) {
   console.error("VITE_CONTRACT_ADDRESS is not set in environment variables");
 }
+// Verify contract bytecode or known methods
+const verifyContract = async () => {
+  const code = await client.getBytecode(CONTRACT_ADDRESS);
+  // Verify this matches expected contract
+};
 
 console.log("Contract Address:", CONTRACT_ADDRESS ? `${CONTRACT_ADDRESS.slice(0, 8)}...` : "NOT SET");
 
@@ -108,12 +123,15 @@ function Header() {
 function MintingInterface() {
   const account = useActiveAccount();
   const address = account?.address;
+  const wallet = useActiveWallet();
   
   // Track authorization and connection state
   const [isAuthorizedUnicornWallet, setIsAuthorizedUnicornWallet] = useState(false);
   const [connectionState, setConnectionState] = useState("checking"); // checking, unauthorized, authorized
   const [mintStatus, setMintStatus] = useState("");
   const [countdown, setCountdown] = useState("");
+  // cooldown
+  const [lastMintAttempt, setLastMintAttempt] = useState(0);
 
   // Contract read calls - using explicit function signatures (ThirdWeb v5 requirement)
   const { data: hasMinted, isLoading: checkingMinted, error: hasMintedError } = useReadContract({
@@ -193,12 +211,14 @@ function MintingInterface() {
       console.log("=== Account Connected Successfully ===");
       console.log("Smart wallet address:", address);
       console.log("This user has an existing smart wallet from our system");
+      console.log("Wallet ",wallet);
+
       
       // If AutoConnect worked and we have an account, they're authorized
       // (because only existing smart wallets from our factory can connect)
-      const isAuthorizedWallet = true; // Simplified - AutoConnect success = authorized
+      const isAuthorizedWallet = true; //wallet && wallet.factoryAddress === factoryAddress;; // Simplified - AutoConnect success = authorized
       
-      console.log("=== Authorization Decision ===");
+      console.log("=== Authorization Decision ===",wallet.factoryAddress);
       console.log("User has existing smart wallet - AUTHORIZED ✅");
       
       setIsAuthorizedUnicornWallet(isAuthorizedWallet);
@@ -246,6 +266,12 @@ function MintingInterface() {
   }, [drawingDate]);
 
   const handleMint = async () => {
+    const now = Date.now();
+    if (now - lastMintAttempt < MINT_COOLDOWN) {
+      setMintStatus("Please wait before trying again");
+      return;
+    }
+
     if (!isAuthorizedUnicornWallet) {
       setMintStatus("Access denied - unauthorized wallet");
       return;
@@ -274,11 +300,12 @@ function MintingInterface() {
           setTimeout(() => setMintStatus(""), 3000);
         },
         onError: (error) => {
-          console.error("Claiming failed:", error);
-          setMintStatus("Claiming failed. Please try again.");
+        console.error("Claiming failed:", error.code); // Log code only
+        setMintStatus("Transaction failed. Please try again."); // Generic message
           setTimeout(() => setMintStatus(""), 5000);
         }
       });
+      setLastMintAttempt(now);
 
     } catch (error) {
       console.error("Transaction preparation failed:", error);
@@ -430,6 +457,33 @@ function MintingInterface() {
         
       )}
 
+        {/* Social Sharing Links */}
+      <div className="text-center mt-6">
+        <p className="text-gray-600 text-sm mb-3">Share your claim:</p>
+        <div className="flex justify-center space-x-4 flex-wrap">
+          <SocialShareButton 
+            platform="LinkedIn" 
+            url="https://www.linkedin.com/sharing/share-offsite/?url=https://app.polygon.ac"
+            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac "
+          />
+          <SocialShareButton 
+            platform="Twitter" 
+            url="https://twitter.com/intent/tweet?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24200%20giveaway%20at%20https%3A//app.polygon.ac%20@MyUnicornAcct%20@0xPolygon"
+            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac"
+          />
+          <SocialShareButton 
+            platform="Farcaster" 
+            url="https://warpcast.com/~/compose?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24200%20giveaway%20at%20https%3A//app.polygon.ac%20@unicornslfg"
+            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac"
+          />
+          <SocialShareButton 
+            platform="Bluesky" 
+            url="https://bsky.app/intent/compose?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24200%20giveaway%20at%20https%3A//app.polygon.ac%20@myunicornaccount"
+            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac"
+          />
+        </div>
+      </div>
+      <div><br/><br/></div>
             {/* Connection Status Display */}
       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto mb-4">
         {account ? (
@@ -452,14 +506,36 @@ function MintingInterface() {
     </div>
   );
 }
+function SocialShareButton({ platform, url, text }) {
+  const handleShare = () => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
-function StatCard({ title, value, subtitle, className = "text-white" }) {
+  const getIcon = () => {
+    switch (platform) {
+      case 'LinkedIn':
+        return '💼';
+      case 'X':
+        return '🐦';
+      case 'Farcaster':
+        return '🟣';
+      case 'Bluesky':
+        return '🦋';
+      default:
+        return '🔗';
+    }
+  };
+
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
-      <h3 className="text-sm font-semibold text-gray-300 mb-1">{title}</h3>
-      <p className={`text-lg font-bold ${className} mb-1`}>{value}</p>
-      {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
-    </div>
+    <button
+      onClick={handleShare}
+      className="inline-flex items-center px-3 py-2 rounded-lg text-white text-sm font-medium transition-colors hover:opacity-80"
+      style={{ backgroundColor: 'gray' }}
+      title={`Share on ${platform}: ${text}`}
+    >
+      <span className="mr-1">{getIcon()}</span>
+      {platform}
+    </button>
   );
 }
 
