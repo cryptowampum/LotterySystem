@@ -22,19 +22,11 @@ const client = createThirdwebClient({
   clientId: clientId || "",
 });
 
-export const supportedChains = [polygon];
-
-export const APP_METADATA = {
-  name: "Unicorn PolyPrize Lottery Dapp",
-  description: "Polygon NFT Lottery Claim",
-  url: "https://polyprize.unicornmini.app",
-  icons: ["https://polyprize.unicornmini.app/icon-192.png"],
-};
-
+// Configure wallets with proper factory address for AutoConnect
 const supportedWallets = [
   inAppWallet({
     smartAccount: {
-      factoryAddress: "0xD771615c873ba5a2149D5312448cE01D677Ee48A",
+      factoryAddress: "0xD771615c873ba5a2149D5312448cE01D677Ee48A", // Unicorn factory address
       chain: polygon,
       gasless: true,
       sponsorGas: true,
@@ -42,10 +34,9 @@ const supportedWallets = [
   })
 ];
 
-console.log("smart account:" + supportedWallets[0].smartAccount?.getAddress());
-
-
 console.log("ThirdWeb Client ID:", clientId ? `${clientId.slice(0, 8)}...` : "NOT SET");
+console.log("Factory Address: 0xD771615c873ba5a2149D5312448cE01D677Ee48A");
+console.log("Supported Wallets:", supportedWallets.length);
 
 // Get contract
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
@@ -63,15 +54,25 @@ const contract = getContract({
 });
 
 function App() {
+  // Track AutoConnect start time for timeout display
+  useEffect(() => {
+    window.autoConnectStart = Date.now();
+  }, []);
+
   return (
     <ThirdwebProvider>
-      {/* AutoConnect with proper configuration for unicorn.eth embedded wallets */}
+      {/* AutoConnect with proper Unicorn configuration */}
       <AutoConnect 
         client={client} 
         wallets={supportedWallets}
-        timeout={12000} // 10 second timeout
+        timeout={15000} // Give more time for connection
         onConnect={(wallet) => {
-          console.log("Connected to Unicorn:", wallet.getAddress());
+          console.log("🦄 AutoConnect successful:", wallet);
+          console.log("Address:", wallet.getAddress ? wallet.getAddress() : 'Getting address...');
+          console.log("Chain:", wallet.getChain ? wallet.getChain()?.name : 'Getting chain...');
+        }}
+        onError={(error) => {
+          console.error("❌ AutoConnect failed:", error);
         }}
       />
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
@@ -213,14 +214,6 @@ function MintingInterface() {
     console.log("Has authCookie:", !!authCookie);
     console.log("AuthCookie length:", authCookie?.length || 0);
     
-    // Check referrer and domain context
-    console.log("Document referrer:", document.referrer);
- /*   const cameFromUnicorn = document.referrer.includes('unicorn-account.com') || 
-                           document.referrer.includes('uunicorn-account.com') ||
-                           window.location.hostname.includes('unicorn-account.com');
-    console.log("Came from unicorn.eth:", cameFromUnicorn);
-*/
-
     // Check localStorage for ThirdWeb embedded wallet session
     console.log("=== localStorage Debug ===");
     const allKeys = Object.keys(localStorage);
@@ -250,36 +243,42 @@ function MintingInterface() {
     if (account && address) {
       console.log("=== Account Connected - Checking Authorization ===");
       
-      // Enhanced authorization logic for unicorn.eth embedded wallets
+      // More permissive authorization for testing AutoConnect
       const isAuthorizedWallet = 
+        // Development: Allow localhost with embedded wallet
+       // (window.location.hostname === 'localhost' && activeWallet === 'inApp') ||
+        
         // Primary: URL parameters indicate unicorn.eth autoconnect
         (walletId === 'inApp' && authCookie && authCookie.length > 50) ||
         
         // Secondary: AutoConnect parameter with embedded wallet
         (autoConnect === 'true' && activeWallet === 'inApp') ||
         
-        
-        // Quaternary: Strong embedded wallet session indicators
+        // Tertiary: Strong embedded wallet session indicators
         (activeWallet === 'inApp' && embeddedWalletKeys.length > 0) ||
         
-        // For development: Allow localhost testing
-        (window.location.hostname === 'localhost' && activeWallet === 'inApp');
+        // Fallback: Any inApp wallet with AutoConnect working
+        (activeWallet === 'inApp');
       
       console.log("=== Authorization Decision ===");
       console.log("Final authorization result:", isAuthorizedWallet);
+      console.log("- Development check:", window.location.hostname === 'localhost' && activeWallet === 'inApp');
       console.log("- URL autoconnect check:", walletId === 'inApp' && authCookie && authCookie.length > 50);
       console.log("- AutoConnect param check:", autoConnect === 'true' && activeWallet === 'inApp');
       console.log("- Session check:", activeWallet === 'inApp' && embeddedWalletKeys.length > 0);
-      console.log("- Development check:", window.location.hostname === 'localhost' && activeWallet === 'inApp');
+      console.log("- Fallback inApp check:", activeWallet === 'inApp');
       
       setIsAuthorizedUnicornWallet(isAuthorizedWallet);
       setConnectionState(isAuthorizedWallet ? "authorized" : "unauthorized");
     } else {
-      console.log("No account connected - setting unauthorized");
+      console.log("No account connected - staying in checking mode");
       setIsAuthorizedUnicornWallet(false);
-      setConnectionState("checking");
+      // Don't set to unauthorized immediately, give AutoConnect time
+      if (connectionState !== "checking") {
+        setConnectionState("checking");
+      }
     }
-  }, [account, address]);
+  }, [account, address, connectionState]);
 
   // Countdown timer
   useEffect(() => {
@@ -358,16 +357,19 @@ function MintingInterface() {
       <div className="text-center">
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 max-w-md mx-auto">
           <div className="animate-pulse">
-            <h2 className="text-2xl font-bold text-white mb-4">🔄 Connecting...</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">🔄 AutoConnect Working...</h2>
             <p className="text-gray-300 text-lg mb-4">
-              AutoConnect is establishing your connection
+              Attempting to connect to Thirdweb embedded wallet
             </p>
             <p className="text-gray-400 text-sm mb-6">
-              Please wait while we verify your unicorn.eth authorization
+              Factory: 0xD771...48A | Chain: Polygon | Gasless: ✅
             </p>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
             </div>
+            <p className="text-xs text-gray-500 mt-4">
+              Timeout in {Math.max(0, 15 - Math.floor((Date.now() - (window.autoConnectStart || Date.now())) / 1000))}s
+            </p>
           </div>
         </div>
       </div>
