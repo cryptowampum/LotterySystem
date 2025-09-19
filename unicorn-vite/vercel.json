@@ -3,11 +3,6 @@
   "outputDirectory": "unicorn-vite/dist",
   "installCommand": "cd unicorn-vite && npm install --legacy-peer-deps",
   "framework": "vite",
-  "functions": {
-    "app/api/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
