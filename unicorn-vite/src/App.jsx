@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ThirdwebProvider, 
-  ConnectButton, 
   useActiveAccount, 
   useReadContract,
   useSendTransaction,
@@ -14,27 +13,37 @@ import './index.css';
 
 // Create ThirdWeb client with error handling
 const clientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID;
-const factoryAccountAddress = import.meta.env.VITE_FACTORY_ACCOUNT_ADDRESS;
 
 if (!clientId) {
   console.error("VITE_THIRDWEB_CLIENT_ID is not set in environment variables");
 }
-if (!factoryAccountAddress) {
-  console.error("VITE_FACTORY_ACCOUNT_ADDRESS is not set in environment variables");
-}
+
 const client = createThirdwebClient({
   clientId: clientId || "",
 });
 
-const wallets = [
+export const supportedChains = [polygon];
+
+export const APP_METADATA = {
+  name: "Unicorn PolyPrize Lottery Dapp",
+  description: "Polygon NFT Lottery Claim",
+  url: "https://polyprize.unicornmini.app",
+  icons: ["https://polyprize.unicornmini.app/icon-192.png"],
+};
+
+const supportedWallets = [
   inAppWallet({
     smartAccount: {
-      factoryAddress: factoryAccountAddress || "0xD771615c873ba5a2149D5312448cE01D677Ee48A",
+      factoryAddress: "0xD771615c873ba5a2149D5312448cE01D677Ee48A",
       chain: polygon,
       gasless: true,
+      sponsorGas: true,
     }
   })
 ];
+
+console.log("smart account:" + supportedWallets[0].smartAccount?.getAddress());
+
 
 console.log("ThirdWeb Client ID:", clientId ? `${clientId.slice(0, 8)}...` : "NOT SET");
 
@@ -56,7 +65,15 @@ const contract = getContract({
 function App() {
   return (
     <ThirdwebProvider>
-      <AutoConnect client={client} wallets={wallets} />
+      {/* AutoConnect with proper configuration for unicorn.eth embedded wallets */}
+      <AutoConnect 
+        client={client} 
+        wallets={supportedWallets}
+        timeout={12000} // 10 second timeout
+        onConnect={(wallet) => {
+          console.log("Connected to Unicorn:", wallet.getAddress());
+        }}
+      />
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="container mx-auto px-4 py-8">
           <Header />
@@ -81,12 +98,24 @@ function Header() {
       <p className="text-sm text-yellow-300 mb-8">
         🔐 Unicorn.eth authorized wallets only • Gasless claiming
       </p>
-      <div className="flex justify-center">
-
-        <p className="text-xl text-gray-300 mb-2">
-         account ? `Connected: ${account.address?.slice(0,6)}...${account.address?.slice(-4)}` : "Unicorn.eth Wallet"
-        </p>
- 
+      
+      {/* Connection Status Display */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto mb-4">
+        {account ? (
+          <div className="text-green-400">
+            <p className="font-semibold">✅ Connected</p>
+            <p className="text-sm text-gray-300">
+              {account.address?.slice(0,6)}...{account.address?.slice(-4)}
+            </p>
+          </div>
+        ) : (
+          <div className="text-yellow-400">
+            <p className="font-semibold">🔄 Connecting...</p>
+            <p className="text-sm text-gray-300">
+              AutoConnect in progress
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -96,8 +125,9 @@ function MintingInterface() {
   const account = useActiveAccount();
   const address = account?.address;
   
-  // Track if user connected via autoconnect
-  const [isAutoConnected, setIsAutoConnected] = useState(false);
+  // Track authorization and connection state
+  const [isAuthorizedUnicornWallet, setIsAuthorizedUnicornWallet] = useState(false);
+  const [connectionState, setConnectionState] = useState("checking"); // checking, unauthorized, authorized
   const [mintStatus, setMintStatus] = useState("");
   const [countdown, setCountdown] = useState("");
 
@@ -133,9 +163,9 @@ function MintingInterface() {
     method: "function paused() view returns (bool)",
   });
 
-  // Debug contract calls - simplified since we know explicit signatures work
+  // Debug contract calls
   useEffect(() => {
-    console.log("=== Contract Debug (Working) ===");
+    console.log("=== Contract Debug (AutoConnect Mode) ===");
     console.log("Contract address:", contract?.address);
     console.log("Chain ID:", contract?.chain?.id);
     
@@ -165,9 +195,9 @@ function MintingInterface() {
   // Send transaction hook
   const { mutate: sendTransaction, isPending: isMinting } = useSendTransaction();
 
-  // Check connection type (unicorn.eth autoconnect detection)
+  // Enhanced AutoConnect detection for unicorn.eth wallets
   useEffect(() => {
-    console.log("=== Unicorn.eth Autoconnect Debug ===");
+    console.log("=== AutoConnect Authorization Check ===");
     console.log("Account:", account);
     console.log("Address:", address);
     
@@ -175,59 +205,79 @@ function MintingInterface() {
     const urlParams = new URLSearchParams(window.location.search);
     const walletId = urlParams.get('walletId');
     const authCookie = urlParams.get('authCookie');
+    const autoConnect = urlParams.get('autoConnect');
+    
     console.log("Current URL:", window.location.href);
     console.log("URL walletId:", walletId);
+    console.log("URL autoConnect:", autoConnect);
     console.log("Has authCookie:", !!authCookie);
     console.log("AuthCookie length:", authCookie?.length || 0);
     
-    // Check referrer to see if they came from unicorn.eth
+    // Check referrer and domain context
     console.log("Document referrer:", document.referrer);
-    const cameFromUnicorn = document.referrer.includes('uunicorn-account.com') || 
-                           window.location.hostname.includes('unicorn-account.com') ||
-                           window.location.href.includes('unicorn-account.com');
+ /*   const cameFromUnicorn = document.referrer.includes('unicorn-account.com') || 
+                           document.referrer.includes('uunicorn-account.com') ||
+                           window.location.hostname.includes('unicorn-account.com');
     console.log("Came from unicorn.eth:", cameFromUnicorn);
-    
+*/
+
     // Check localStorage for ThirdWeb embedded wallet session
     console.log("=== localStorage Debug ===");
     const allKeys = Object.keys(localStorage);
-    const relevantKeys = allKeys.filter(key => 
+    const thirdwebKeys = allKeys.filter(key => 
       key.toLowerCase().includes('thirdweb') || 
       key.toLowerCase().includes('tw') ||
       key.toLowerCase().includes('embedded') ||
       key.toLowerCase().includes('inapp')
     );
-    console.log("ThirdWeb localStorage keys:", relevantKeys);
-    relevantKeys.forEach(key => {
-      const value = localStorage.getItem(key);
-      console.log(`${key}:`, value ? `${value.substring(0, 50)}...` : null);
-    });
+    console.log("ThirdWeb localStorage keys:", thirdwebKeys);
     
+    // Get active wallet type
+    const activeWallet = localStorage.getItem('thirdweb:active-wallet');
+    const walletData = localStorage.getItem('thirdweb:connected-wallet-data');
+    console.log("Active wallet type:", activeWallet);
+    console.log("Has wallet data:", !!walletData);
+    
+    // Check for embedded wallet session storage
+    const embeddedWalletKeys = thirdwebKeys.filter(key => 
+      localStorage.getItem(key) && 
+      (localStorage.getItem(key).includes('inApp') || 
+       localStorage.getItem(key).includes('embedded') ||
+       localStorage.getItem(key).includes('email'))
+    );
+    console.log("Embedded wallet session keys:", embeddedWalletKeys);
+
     if (account && address) {
-      // Authorization logic: Only allow unicorn.eth embedded wallets with proper autoconnect
-      const isAuthorizedUnicornWallet = 
-        // Primary check: URL has inApp wallet with authCookie (from unicorn.eth)
-        (walletId === 'inApp' && authCookie && authCookie.length > 100) ||
+      console.log("=== Account Connected - Checking Authorization ===");
+      
+      // Enhanced authorization logic for unicorn.eth embedded wallets
+      const isAuthorizedWallet = 
+        // Primary: URL parameters indicate unicorn.eth autoconnect
+        (walletId === 'inApp' && authCookie && authCookie.length > 50) ||
         
-        // Secondary check: ThirdWeb embedded wallet session exists
-        (localStorage.getItem('thirdweb:active-wallet') === 'inApp') ||
+        // Secondary: AutoConnect parameter with embedded wallet
+        (autoConnect === 'true' && activeWallet === 'inApp') ||
         
-        // Tertiary check: Any embedded wallet indicator in localStorage
-        relevantKeys.some(key => 
-          key.includes('inApp') || 
-          key.includes('embedded') ||
-          (localStorage.getItem(key) && localStorage.getItem(key).includes('inApp'))
-        );
+        
+        // Quaternary: Strong embedded wallet session indicators
+        (activeWallet === 'inApp' && embeddedWalletKeys.length > 0) ||
+        
+        // For development: Allow localhost testing
+        (window.location.hostname === 'localhost' && activeWallet === 'inApp');
       
       console.log("=== Authorization Decision ===");
-      console.log("Is authorized unicorn.eth wallet:", isAuthorizedUnicornWallet);
-      console.log("Wallet ID check:", walletId === 'inApp');
-      console.log("Auth cookie check:", !!authCookie && authCookie.length > 100);
-      console.log("Active wallet check:", localStorage.getItem('thirdweb:active-wallet'));
+      console.log("Final authorization result:", isAuthorizedWallet);
+      console.log("- URL autoconnect check:", walletId === 'inApp' && authCookie && authCookie.length > 50);
+      console.log("- AutoConnect param check:", autoConnect === 'true' && activeWallet === 'inApp');
+      console.log("- Session check:", activeWallet === 'inApp' && embeddedWalletKeys.length > 0);
+      console.log("- Development check:", window.location.hostname === 'localhost' && activeWallet === 'inApp');
       
-      setIsAutoConnected(isAuthorizedUnicornWallet);
+      setIsAuthorizedUnicornWallet(isAuthorizedWallet);
+      setConnectionState(isAuthorizedWallet ? "authorized" : "unauthorized");
     } else {
-      console.log("No account or address detected - setting unauthorized");
-      setIsAutoConnected(false);
+      console.log("No account connected - setting unauthorized");
+      setIsAuthorizedUnicornWallet(false);
+      setConnectionState("checking");
     }
   }, [account, address]);
 
@@ -258,13 +308,13 @@ function MintingInterface() {
   }, [drawingDate]);
 
   const handleMint = async () => {
-    if (!isAutoConnected) {
+    if (!isAuthorizedUnicornWallet) {
       setMintStatus("Access denied - unauthorized wallet");
       return;
     }
 
     if (!account) {
-      setMintStatus("Please connect your wallet");
+      setMintStatus("Please ensure your wallet is connected");
       return;
     }
 
@@ -278,38 +328,47 @@ function MintingInterface() {
         params: [],
       });
 
-      // Send the transaction - gas is automatically sponsored via account abstraction
+      // Send the transaction - gas is automatically sponsored via smart account
       sendTransaction(transaction, {
         onSuccess: (result) => {
+          console.log("Mint successful:", result);
           setMintStatus("Successfully claimed! 🎉");
           setTimeout(() => setMintStatus(""), 3000);
         },
         onError: (error) => {
           console.error("Claiming failed:", error);
           setMintStatus("Claiming failed. Please try again.");
+          setTimeout(() => setMintStatus(""), 5000);
         }
       });
 
     } catch (error) {
       console.error("Transaction preparation failed:", error);
       setMintStatus("Transaction failed. Please try again.");
+      setTimeout(() => setMintStatus(""), 5000);
     }
   };
 
   const supplyPercentage = totalSupply && maxSupply ? 
     Math.round((parseInt(totalSupply.toString()) / parseInt(maxSupply.toString())) * 100) : 0;
 
-  if (!address) {
+  // Show connection status while AutoConnect is working
+  if (connectionState === "checking") {
     return (
       <div className="text-center">
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 max-w-md mx-auto">
-          <h2 className="text-2xl font-bold text-white mb-4">🔐 Authorized Access Only</h2>
-          <p className="text-gray-300 text-lg mb-4">
-            This NFT claiming is restricted to pre-authorized wallets only.
-          </p>
-          <p className="text-gray-400 text-sm mb-6">
-            Please use the Connect Wallet button above to connect your authorized wallet.
-          </p>
+          <div className="animate-pulse">
+            <h2 className="text-2xl font-bold text-white mb-4">🔄 Connecting...</h2>
+            <p className="text-gray-300 text-lg mb-4">
+              AutoConnect is establishing your connection
+            </p>
+            <p className="text-gray-400 text-sm mb-6">
+              Please wait while we verify your unicorn.eth authorization
+            </p>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -331,8 +390,8 @@ function MintingInterface() {
         />
         <StatCard 
           title="Access Level" 
-          value={isAutoConnected ? "Authorized ✅" : "Unauthorized ❌"} 
-          className={isAutoConnected ? "text-green-400" : "text-red-400"}
+          value={isAuthorizedUnicornWallet ? "Authorized ✅" : "Unauthorized ❌"} 
+          className={isAuthorizedUnicornWallet ? "text-green-400" : "text-red-400"}
         />
         <StatCard 
           title="Drawing Status" 
@@ -382,16 +441,24 @@ function MintingInterface() {
         
         {checkingMinted ? (
           <div className="text-center text-white">Checking claim status...</div>
-        ) : !isAutoConnected ? (
+        ) : !isAuthorizedUnicornWallet ? (
           <div className="text-center">
             <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-red-300 mb-2">🚫 Access Denied</h3>
               <p className="text-red-200 mb-2">
-                NFT claiming is restricted to pre-authorized wallets only.
+                This NFT claiming is restricted to pre-authorized unicorn.eth embedded wallets only.
               </p>
-              <p className="text-red-200 text-sm">
-                If you believe you should have access, please contact the project administrators.
+              <p className="text-red-200 text-sm mb-4">
+                You must access this page through the official unicorn.eth autoconnect link.
               </p>
+              <div className="bg-red-700/30 rounded-lg p-4 text-left">
+                <p className="text-red-200 text-sm font-semibold mb-2">Expected Access Method:</p>
+                <ul className="text-red-200 text-xs space-y-1">
+                  <li>• Must come from unicorn.eth platform</li>
+                  <li>• Must use embedded wallet autoconnect</li>
+                  <li>• Manual wallet connections are not allowed</li>
+                </ul>
+              </div>
             </div>
           </div>
         ) : isPaused ? (
@@ -435,7 +502,7 @@ function MintingInterface() {
         ) : (
           <div className="text-center">
             <div className="bg-green-500/20 border border-green-500 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-semibold text-green-300 mb-3">✅ Authorized to Claim</h3>
+              <h3 className="text-xl font-semibold text-green-300 mb-3">✅ Authorized via AutoConnect</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div className="bg-white/10 rounded p-3">
                   <p className="font-semibold text-white">Soul-Bound Features:</p>
@@ -448,9 +515,9 @@ function MintingInterface() {
                 <div className="bg-white/10 rounded p-3">
                   <p className="font-semibold text-white">Your Access:</p>
                   <ul className="text-green-200 space-y-1 mt-2">
-                    <li>• Pre-authorized wallet ✅</li>
+                    <li>• Unicorn.eth wallet ✅</li>
                     <li>• Auto-connected ✅</li>
-                    <li>• Ready to claim ✅</li>
+                    <li>• Gasless claiming ✅</li>
                   </ul>
                 </div>
               </div>
@@ -458,7 +525,7 @@ function MintingInterface() {
             
             <button
               onClick={handleMint}
-              disabled={isMinting || isPaused || !isAutoConnected}
+              disabled={isMinting || isPaused || !isAuthorizedUnicornWallet}
               className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-lg text-xl transition-colors"
             >
               {isMinting ? "Claiming..." : "🦄 Claim NFT"}
@@ -472,6 +539,17 @@ function MintingInterface() {
           </div>
         )}
       </div>
+
+      {/* Debug Information (for development) */}
+      {window.location.hostname === 'localhost' && (
+        <div className="bg-gray-800/50 rounded-lg p-4 text-xs text-gray-400">
+          <p><strong>Debug Info (localhost only):</strong></p>
+          <p>Connection State: {connectionState}</p>
+          <p>Authorized: {isAuthorizedUnicornWallet.toString()}</p>
+          <p>Active Wallet: {localStorage.getItem('thirdweb:active-wallet')}</p>
+          <p>URL Params: {window.location.search}</p>
+        </div>
+      )}
     </div>
   );
 }
