@@ -10,6 +10,15 @@ import {
 import { createThirdwebClient, getContract, prepareContractCall } from "thirdweb";
 import { inAppWallet } from "thirdweb/wallets";
 import { polygon } from "thirdweb/chains";
+import { 
+  initGA, 
+  trackPageView, 
+  trackWalletConnection, 
+  trackNFTClaim, 
+  trackSocialShare, 
+  trackAuthorizationCheck,
+  trackDrawingInfo 
+} from './utils/analytics';
 import './index.css';
 
 // Create ThirdWeb client with error handling
@@ -45,8 +54,10 @@ const supportedWallets = [
   })
 ];
 
-console.log("ThirdWeb Client ID:", clientId ? `${clientId.slice(0, 8)}...` : "NOT SET");
-console.log("Supported Wallets:", supportedWallets.length);
+if (process.env.NODE_ENV === 'development') {
+  console.log("ThirdWeb Client ID configured");
+  console.log("Supported Wallets:", supportedWallets.length);
+}
 
 // Get contract
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
@@ -60,7 +71,9 @@ const verifyContract = async () => {
   // Verify this matches expected contract
 };
 
-console.log("Contract Address:", CONTRACT_ADDRESS ? `${CONTRACT_ADDRESS.slice(0, 8)}...` : "NOT SET");
+if (process.env.NODE_ENV === 'development') {
+  console.log("Contract Address configured");
+}
 
 const contract = getContract({
   client,
@@ -69,6 +82,12 @@ const contract = getContract({
 });
 
 function App() {
+  // Initialize Google Analytics on app start
+  useEffect(() => {
+    initGA();
+    trackPageView('/');
+  }, []);
+
   // Track AutoConnect start time for timeout display
   useEffect(() => {
     window.autoConnectStart = Date.now();
@@ -85,12 +104,17 @@ function App() {
           console.log("🦄 AutoConnect successful:", wallet);
           console.log("Address:", wallet.getAddress ? wallet.getAddress() : 'Getting address...');
           console.log("Chain:", wallet.getChain ? wallet.getChain()?.name : 'Getting chain...');
+          
+          // Track successful wallet connection
+          const address = wallet.getAddress ? wallet.getAddress() : '';
+          trackWalletConnection(address, true);
         }}
         onError={(error) => {
           console.error("❌ AutoConnect failed:", error);
+          trackWalletConnection('', false);
         }}
       />
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+      <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
           <Header />
           <MintingInterface />
@@ -105,17 +129,15 @@ function Header() {
   
   return (
     <div className="text-center mb-12">
-      <h1 className="text-5xl font-bold text-white mb-4">
+      <h1 className="text-5xl font-bold text-gray-800 mb-4">
         🦄 <br/>Claim your PolyPrize
       </h1>
-      <p className="text-xl text-gray-300 mb-2">
+      <p className="text-xl text-gray-700 mb-2">
         Click "Claim" below to receive your PolyPrize NFT and be entered to win the $200 raffle.
       </p>
-      <p className="text-sm text-yellow-300 mb-8">
+      <p className="text-sm text-purple-700 mb-8">
         🔐 Existing polygon.ac members only • Claim for free 
       </p>
-      
-
     </div>
   );
 }
@@ -167,31 +189,33 @@ function MintingInterface() {
 
   // Debug contract calls
   useEffect(() => {
-    console.log("=== Contract Debug (AutoConnect Mode) ===");
-    console.log("Contract address:", contract?.address);
-    console.log("Chain ID:", contract?.chain?.id);
-    
-    console.log("=== Contract Data (All Explicit Signatures) ===");
-    console.log("hasMinted:", hasMinted);
-    console.log("totalSupply:", totalSupply?.toString());
-    console.log("maxSupply:", maxSupply?.toString());
-    console.log("drawingDate:", drawingDate?.toString());
-    console.log("isMintingActive:", isMintingActive);
-    console.log("isPaused:", isPaused);
-    
-    // Convert BigInt timestamp to readable date
-    if (drawingDate) {
-      const drawingDateJS = new Date(parseInt(drawingDate.toString()) * 1000);
-      console.log("Drawing date (readable):", drawingDateJS.toLocaleString());
+    if (process.env.NODE_ENV === 'development') {
+      console.log("=== Contract Debug (AutoConnect Mode) ===");
+      console.log("Contract address:", contract?.address);
+      console.log("Chain ID:", contract?.chain?.id);
+      
+      console.log("=== Contract Data (All Explicit Signatures) ===");
+      console.log("hasMinted:", hasMinted);
+      console.log("totalSupply:", totalSupply?.toString());
+      console.log("maxSupply:", maxSupply?.toString());
+      console.log("drawingDate:", drawingDate?.toString());
+      console.log("isMintingActive:", isMintingActive);
+      console.log("isPaused:", isPaused);
+      
+      // Convert BigInt timestamp to readable date
+      if (drawingDate) {
+        const drawingDateJS = new Date(parseInt(drawingDate.toString()) * 1000);
+        console.log("Drawing date (readable):", drawingDateJS.toLocaleString());
+      }
+      
+      // Log any errors
+      if (totalSupplyError) console.error("totalSupply error:", totalSupplyError);
+      if (hasMintedError) console.error("hasMinted error:", hasMintedError);
+      if (maxSupplyError) console.error("maxSupply error:", maxSupplyError);
+      if (drawingDateError) console.error("drawingDate error:", drawingDateError);
+      if (isMintingActiveError) console.error("isMintingActive error:", isMintingActiveError);
+      if (isPausedError) console.error("isPaused error:", isPausedError);
     }
-    
-    // Log any errors
-    if (totalSupplyError) console.error("totalSupply error:", totalSupplyError);
-    if (hasMintedError) console.error("hasMinted error:", hasMintedError);
-    if (maxSupplyError) console.error("maxSupply error:", maxSupplyError);
-    if (drawingDateError) console.error("drawingDate error:", drawingDateError);
-    if (isMintingActiveError) console.error("isMintingActive error:", isMintingActiveError);
-    if (isPausedError) console.error("isPaused error:", isPausedError);
   }, [hasMinted, totalSupply, maxSupply, drawingDate, isMintingActive, isPaused]);
 
   // Send transaction hook
@@ -199,27 +223,32 @@ function MintingInterface() {
 
   // Simplified authorization for existing smart wallet holders
   useEffect(() => {
-    console.log("=== Existing Smart Wallet Authorization Check ===");
-    console.log("Account:", account);
-    console.log("Address:", address);
-    
-    // Check localStorage for ThirdWeb wallet session
-    const activeWallet = localStorage.getItem('thirdweb:active-wallet');
-    console.log("Active wallet type:", activeWallet);
+    if (process.env.NODE_ENV === 'development') {
+      console.log("=== Existing Smart Wallet Authorization Check ===");
+      console.log("Account:", account);
+      console.log("Address:", address);
+      
+      // Check localStorage for ThirdWeb wallet session
+      const activeWallet = localStorage.getItem('thirdweb:active-wallet');
+      console.log("Active wallet type:", activeWallet);
+    }
     
     if (account && address) {
-      console.log("=== Account Connected Successfully ===");
-      console.log("Smart wallet address:", address);
-      console.log("This user has an existing smart wallet from our system");
-      console.log("Wallet ",wallet);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("=== Account Connected Successfully ===");
+        console.log("Smart wallet address:", address);
+        console.log("This user has an existing smart wallet from our system");
+        console.log("Wallet ", wallet);
+        console.log("=== Authorization Decision ===", wallet?.factoryAddress);
+        console.log("User has existing smart wallet - AUTHORIZED ✅");
+      }
 
-      
       // If AutoConnect worked and we have an account, they're authorized
       // (because only existing smart wallets from our factory can connect)
       const isAuthorizedWallet = true; //wallet && wallet.factoryAddress === factoryAddress;; // Simplified - AutoConnect success = authorized
       
-      console.log("=== Authorization Decision ===",wallet.factoryAddress);
-      console.log("User has existing smart wallet - AUTHORIZED ✅");
+      // Track authorization success
+      trackAuthorizationCheck(isAuthorizedWallet, 'smart_wallet');
       
       setIsAuthorizedUnicornWallet(isAuthorizedWallet);
       setConnectionState("authorized");
@@ -231,6 +260,7 @@ function MintingInterface() {
       const timer = setTimeout(() => {
         if (!account) {
           console.log("Timeout reached - user doesn't have existing smart wallet");
+          trackAuthorizationCheck(false, 'no_wallet');
           setConnectionState("unauthorized");
         }
       }, 15000); // Match AutoConnect timeout
@@ -260,10 +290,15 @@ function MintingInterface() {
       const seconds = timeLeft % 60;
       
       setCountdown(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+      
+      // Track drawing info on first render
+      if (countdown === "" && days >= 0) {
+        trackDrawingInfo(days);
+      }
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [drawingDate]);
+  }, [drawingDate, countdown]);
 
   const handleMint = async () => {
     const now = Date.now();
@@ -274,11 +309,13 @@ function MintingInterface() {
 
     if (!isAuthorizedUnicornWallet) {
       setMintStatus("Access denied - unauthorized wallet");
+      trackNFTClaim(address, false, 'unauthorized');
       return;
     }
 
     if (!account) {
       setMintStatus("Please ensure your wallet is connected");
+      trackNFTClaim('', false, 'no_account');
       return;
     }
 
@@ -297,11 +334,13 @@ function MintingInterface() {
         onSuccess: (result) => {
           console.log("Mint successful:", result);
           setMintStatus("Successfully claimed! 🎉");
+          trackNFTClaim(address, true);
           setTimeout(() => setMintStatus(""), 3000);
         },
         onError: (error) => {
         console.error("Claiming failed:", error.code); // Log code only
         setMintStatus("Transaction failed. Please try again."); // Generic message
+        trackNFTClaim(address, false, error.code || 'transaction_failed');
           setTimeout(() => setMintStatus(""), 5000);
         }
       });
@@ -310,6 +349,7 @@ function MintingInterface() {
     } catch (error) {
       console.error("Transaction preparation failed:", error);
       setMintStatus("Transaction failed. Please try again.");
+      trackNFTClaim(address, false, 'preparation_failed');
       setTimeout(() => setMintStatus(""), 5000);
     }
   };
@@ -321,17 +361,17 @@ function MintingInterface() {
   if (connectionState === "checking") {
     return (
       <div className="text-center">
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 max-w-md mx-auto">
+        <div className="bg-gray-100 rounded-lg p-8 max-w-md mx-auto border border-gray-200">
           <div className="animate-pulse">
-            <h2 className="text-2xl font-bold text-white mb-4">🔄 Looking for Existing Wallet...</h2>
-            <p className="text-gray-300 text-lg mb-4">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">🔄 Looking for Existing Wallet...</h2>
+            <p className="text-gray-700 text-lg mb-4">
               Connecting to your unicorn.eth wallet
             </p>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-gray-600 text-sm mb-6">
               Only existing smart wallets from polygon.ac can access this lottery
             </p>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+            <div className="w-full bg-gray-300 rounded-full h-2">
+              <div className="h-2 rounded-full animate-pulse" style={{ width: '60%', backgroundColor: '#A83DCC' }}></div>
             </div>
             <p className="text-xs text-gray-500 mt-4">
               Factory: 0xD771...48A | Client: {clientId?.slice(0, 8)}...
@@ -346,63 +386,63 @@ function MintingInterface() {
     
     <div className="max-w-4xl mx-auto">
             {/* Claiming Section */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
+      <div className="bg-gray-100 rounded-lg p-8 mb-8 border border-gray-200">
         
         {checkingMinted ? (
-          <div className="text-center text-white">Checking claim status...</div>
+          <div className="text-center text-gray-800">Checking claim status...</div>
         ) : !isAuthorizedUnicornWallet ? (
           <div className="text-center">
-            <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 mb-4">
-              <h3 className="text-xl font-semibold text-red-300 mb-2">🚫 No Existing Wallet Found</h3>
-              <p className="text-red-200 mb-2">
+            <div className="bg-red-100 border border-red-300 rounded-lg p-6 mb-4">
+              <h3 className="text-xl font-semibold text-red-800 mb-2">🚫 No Existing Wallet Found</h3>
+              <p className="text-red-700 mb-2">
                 This lottery is only available to users with previously issued from unicorn.eth.
               </p>
-              <p className="text-red-200 text-sm mb-4">
+              <p className="text-red-700 text-sm mb-4">
                 You must have received a smart wallet from our system to participate.
               </p>
             </div>
           </div>
         ) : isPaused ? (
           <div className="text-center">
-            <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-6 mb-4">
-              <h3 className="text-xl font-semibold text-yellow-300 mb-2">⏸️ Claiming Paused</h3>
-              <p className="text-yellow-200">
+            <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-6 mb-4">
+              <h3 className="text-xl font-semibold text-yellow-800 mb-2">⏸️ Claiming Paused</h3>
+              <p className="text-yellow-700">
                 Claiming has been temporarily paused by the contract owner.
               </p>
             </div>
           </div>
         ) : !isMintingActive ? (
           <div className="text-center">
-            <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 mb-4">
-              <h3 className="text-xl font-semibold text-red-300 mb-2">🚫 Claiming Period Ended</h3>
-              <p className="text-red-200">
+            <div className="bg-red-100 border border-red-300 rounded-lg p-6 mb-4">
+              <h3 className="text-xl font-semibold text-red-800 mb-2">🚫 Claiming Period Ended</h3>
+              <p className="text-red-700">
                 The drawing date has passed and PolyPrize claiming is no longer available.
               </p>
-              <p className="text-red-200 mt-2">
+              <p className="text-red-700 mt-2">
                 Drawing Date: {drawingDate ? new Date(parseInt(drawingDate.toString()) * 1000).toLocaleString() : 'Loading...'}
               </p>
             </div>
           </div>
         ) : totalSupply && maxSupply && parseInt(totalSupply.toString()) >= parseInt(maxSupply.toString()) ? (
           <div className="text-center">
-            <div className="bg-orange-500/20 border border-orange-500 rounded-lg p-6 mb-4">
-              <h3 className="text-xl font-semibold text-orange-300 mb-2">🎯 Max Supply Reached</h3>
-              <p className="text-orange-200">
+            <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 mb-4">
+              <h3 className="text-xl font-semibold text-orange-800 mb-2">🎯 Max Supply Reached</h3>
+              <p className="text-orange-700">
                 All {maxSupply.toString()} Prizes have been claimed!
               </p>
             </div>
           </div>
         ) : hasMinted ? (
           <div className="text-center">
-            <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mb-4">
-              <p className="text-green-300">
+            <div className="border border-purple-300 rounded-lg p-4 mb-4" style={{ backgroundColor: '#FBE9FB' }}>
+              <p className="text-purple-800">
                 You have claimed your PolyPrize! 🎉
               </p>
             </div>
           </div>
         ) : (
           <div className="text-center">
-            <div className="bg-green-500/20 border border-green-500 rounded-lg p-6 mb-6">
+            <div className="border border-purple-300 rounded-lg p-6 mb-6" style={{ backgroundColor: '#FBE9FB' }}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
  
               </div>
@@ -411,14 +451,15 @@ function MintingInterface() {
             <button
               onClick={handleMint}
               disabled={isMinting || isPaused || !isAuthorizedUnicornWallet}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-4 px-8 rounded-lg text-xl transition-colors"
+              className="text-white font-semibold py-4 px-8 rounded-lg text-xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed hover:opacity-90"
+              style={{ backgroundColor: '#A83DCC' }}
             >
               {isMinting ? "Claiming..." : "🦄 Claim NFT"}
             </button>
             
             {mintStatus && (
-              <div className="mt-4 p-3 bg-gray-800 rounded-lg">
-                <p className="text-white">{mintStatus}</p>
+              <div className="mt-4 p-3 rounded-lg border border-purple-300" style={{ backgroundColor: '#FBE9FB' }}>
+                <p className="text-purple-800">{mintStatus}</p>
               </div>
             )}
           </div>
@@ -426,26 +467,26 @@ function MintingInterface() {
       </div>
             {/* Drawing Date Info */}
       {drawingDate && (
-        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-lg p-6 mb-8">
-          <h3 className="text-xl font-bold text-yellow-300 mb-2 flex items-center">
+        <div className="border border-purple-300 rounded-lg p-6 mb-8" style={{ backgroundColor: '#FBE9FB' }}>
+          <h3 className="text-xl font-bold text-purple-800 mb-2 flex items-center">
             ⏰ $200 Raffle Details 
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-gray-300">Drawing Date:</p>
-              <p className="text-white font-semibold">
+              <p className="text-gray-700">Drawing Date:</p>
+              <p className="text-gray-900 font-semibold">
                 {new Date(parseInt(drawingDate.toString()) * 1000).toLocaleString()}
               </p>
             </div>
             <div>
-              <p className="text-gray-300">Status:</p>
-              <p className={`font-semibold ${isMintingActive ? 'text-green-400' : 'text-red-400'}`}>
+              <p className="text-gray-700">Status:</p>
+              <p className={`font-semibold ${isMintingActive ? 'text-green-700' : 'text-red-700'}`}>
                 {isMintingActive ? '🟢 Claiming Active' : '🔴 Claiming Ended'}
               </p>
             </div>
                        <div>
-              <p className="text-gray-300">Time Remaining:</p>
-              <p className={`font-semibold ${isMintingActive ? 'text-green-400' : 'text-red-400'}`}>
+              <p className="text-gray-700">Time Remaining:</p>
+              <p className={`font-semibold ${isMintingActive ? 'text-green-700' : 'text-red-700'}`}>
                 {countdown || "Loading..."} 
               </p>
             </div>
@@ -459,7 +500,7 @@ function MintingInterface() {
 
         {/* Social Sharing Links */}
       <div className="text-center mt-6">
-        <p className="text-gray-600 text-sm mb-3">Share your claim:</p>
+        <p className="text-gray-700 text-sm mb-3">Share your claim:</p>
         <div className="flex justify-center space-x-4 flex-wrap">
           <SocialShareButton 
             platform="LinkedIn" 
@@ -485,18 +526,18 @@ function MintingInterface() {
       </div>
       <div><br/><br/></div>
             {/* Connection Status Display */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto mb-4">
+      <div className="bg-gray-100 rounded-lg p-4 max-w-md mx-auto mb-4 border border-gray-200">
         {account ? (
-          <div className="text-green-400">
+          <div style={{ color: '#A83DCC' }}>
             <p className="font-semibold">✅ Connected</p>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-700">
               {account.address?.slice(0,6)}...{account.address?.slice(-4)}
             </p>
           </div>
         ) : (
-          <div className="text-yellow-400">
+          <div style={{ color: '#A83DCC' }}>
             <p className="font-semibold">🔄 Connecting...</p>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-gray-700">
               AutoConnect in progress
             </p>
           </div>
@@ -508,6 +549,7 @@ function MintingInterface() {
 }
 function SocialShareButton({ platform, url, text }) {
   const handleShare = () => {
+    trackSocialShare(platform);
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -515,7 +557,7 @@ function SocialShareButton({ platform, url, text }) {
     switch (platform) {
       case 'LinkedIn':
         return '💼';
-      case 'X':
+      case 'Twitter':
         return '🐦';
       case 'Farcaster':
         return '🟣';
@@ -530,7 +572,7 @@ function SocialShareButton({ platform, url, text }) {
     <button
       onClick={handleShare}
       className="inline-flex items-center px-3 py-2 rounded-lg text-white text-sm font-medium transition-colors hover:opacity-80"
-      style={{ backgroundColor: 'gray' }}
+      style={{ backgroundColor: '#A83DCC' }}
       title={`Share on ${platform}: ${text}`}
     >
       <span className="mr-1">{getIcon()}</span>
