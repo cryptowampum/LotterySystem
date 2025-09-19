@@ -91,33 +91,16 @@ function Header() {
   return (
     <div className="text-center mb-12">
       <h1 className="text-5xl font-bold text-white mb-4">
-        🦄 Unicorn.eth PolyPrize Collection
+        🦄 <br/>Claim your PolyPrize
       </h1>
       <p className="text-xl text-gray-300 mb-2">
-        Claim your exclusive soul-bound NFT
+        Click "Claim" below to receive your PolyPrize NFT and be entered to win the $200 raffle.
       </p>
       <p className="text-sm text-yellow-300 mb-8">
-        🔐 Unicorn.eth authorized wallets only • Gasless claiming
+        🔐 Existing polygon.ac members only • Claim for free 
       </p>
       
-      {/* Connection Status Display */}
-      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto mb-4">
-        {account ? (
-          <div className="text-green-400">
-            <p className="font-semibold">✅ Connected</p>
-            <p className="text-sm text-gray-300">
-              {account.address?.slice(0,6)}...{account.address?.slice(-4)}
-            </p>
-          </div>
-        ) : (
-          <div className="text-yellow-400">
-            <p className="font-semibold">🔄 Connecting...</p>
-            <p className="text-sm text-gray-300">
-              AutoConnect in progress
-            </p>
-          </div>
-        )}
-      </div>
+
     </div>
   );
 }
@@ -196,89 +179,45 @@ function MintingInterface() {
   // Send transaction hook
   const { mutate: sendTransaction, isPending: isMinting } = useSendTransaction();
 
-  // Enhanced AutoConnect detection for unicorn.eth wallets
+  // Simplified authorization for existing smart wallet holders
   useEffect(() => {
-    console.log("=== AutoConnect Authorization Check ===");
+    console.log("=== Existing Smart Wallet Authorization Check ===");
     console.log("Account:", account);
     console.log("Address:", address);
     
-    // Check URL parameters for unicorn.eth autoconnect
-    const urlParams = new URLSearchParams(window.location.search);
-    const walletId = urlParams.get('walletId');
-    const authCookie = urlParams.get('authCookie');
-    const autoConnect = urlParams.get('autoConnect');
-    
-    console.log("Current URL:", window.location.href);
-    console.log("URL walletId:", walletId);
-    console.log("URL autoConnect:", autoConnect);
-    console.log("Has authCookie:", !!authCookie);
-    console.log("AuthCookie length:", authCookie?.length || 0);
-    
-    // Check localStorage for ThirdWeb embedded wallet session
-    console.log("=== localStorage Debug ===");
-    const allKeys = Object.keys(localStorage);
-    const thirdwebKeys = allKeys.filter(key => 
-      key.toLowerCase().includes('thirdweb') || 
-      key.toLowerCase().includes('tw') ||
-      key.toLowerCase().includes('embedded') ||
-      key.toLowerCase().includes('inapp')
-    );
-    console.log("ThirdWeb localStorage keys:", thirdwebKeys);
-    
-    // Get active wallet type
+    // Check localStorage for ThirdWeb wallet session
     const activeWallet = localStorage.getItem('thirdweb:active-wallet');
-    const walletData = localStorage.getItem('thirdweb:connected-wallet-data');
     console.log("Active wallet type:", activeWallet);
-    console.log("Has wallet data:", !!walletData);
     
-    // Check for embedded wallet session storage
-    const embeddedWalletKeys = thirdwebKeys.filter(key => 
-      localStorage.getItem(key) && 
-      (localStorage.getItem(key).includes('inApp') || 
-       localStorage.getItem(key).includes('embedded') ||
-       localStorage.getItem(key).includes('email'))
-    );
-    console.log("Embedded wallet session keys:", embeddedWalletKeys);
-
     if (account && address) {
-      console.log("=== Account Connected - Checking Authorization ===");
+      console.log("=== Account Connected Successfully ===");
+      console.log("Smart wallet address:", address);
+      console.log("This user has an existing smart wallet from our system");
       
-      // More permissive authorization for testing AutoConnect
-      const isAuthorizedWallet = 
-        // Development: Allow localhost with embedded wallet
-       // (window.location.hostname === 'localhost' && activeWallet === 'inApp') ||
-        
-        // Primary: URL parameters indicate unicorn.eth autoconnect
-        (walletId === 'inApp' && authCookie && authCookie.length > 50) ||
-        
-        // Secondary: AutoConnect parameter with embedded wallet
-        (autoConnect === 'true' && activeWallet === 'inApp') ||
-        
-        // Tertiary: Strong embedded wallet session indicators
-        (activeWallet === 'inApp' && embeddedWalletKeys.length > 0) ||
-        
-        // Fallback: Any inApp wallet with AutoConnect working
-        (activeWallet === 'inApp');
+      // If AutoConnect worked and we have an account, they're authorized
+      // (because only existing smart wallets from our factory can connect)
+      const isAuthorizedWallet = true; // Simplified - AutoConnect success = authorized
       
       console.log("=== Authorization Decision ===");
-      console.log("Final authorization result:", isAuthorizedWallet);
-      console.log("- Development check:", window.location.hostname === 'localhost' && activeWallet === 'inApp');
-      console.log("- URL autoconnect check:", walletId === 'inApp' && authCookie && authCookie.length > 50);
-      console.log("- AutoConnect param check:", autoConnect === 'true' && activeWallet === 'inApp');
-      console.log("- Session check:", activeWallet === 'inApp' && embeddedWalletKeys.length > 0);
-      console.log("- Fallback inApp check:", activeWallet === 'inApp');
+      console.log("User has existing smart wallet - AUTHORIZED ✅");
       
       setIsAuthorizedUnicornWallet(isAuthorizedWallet);
-      setConnectionState(isAuthorizedWallet ? "authorized" : "unauthorized");
+      setConnectionState("authorized");
     } else {
-      console.log("No account connected - staying in checking mode");
+      console.log("No account connected - user doesn't have existing smart wallet");
       setIsAuthorizedUnicornWallet(false);
-      // Don't set to unauthorized immediately, give AutoConnect time
-      if (connectionState !== "checking") {
-        setConnectionState("checking");
-      }
+      
+      // After timeout, show unauthorized (they don't have an existing wallet)
+      const timer = setTimeout(() => {
+        if (!account) {
+          console.log("Timeout reached - user doesn't have existing smart wallet");
+          setConnectionState("unauthorized");
+        }
+      }, 15000); // Match AutoConnect timeout
+      
+      return () => clearTimeout(timer);
     }
-  }, [account, address, connectionState]);
+  }, [account, address]);
 
   // Countdown timer
   useEffect(() => {
@@ -318,7 +257,7 @@ function MintingInterface() {
     }
 
     try {
-      setMintStatus("Claiming your gasless soul-bound NFT...");
+      setMintStatus("Claiming your PolyPrize...");
       
       // Prepare the contract call with explicit function signature
       const transaction = prepareContractCall({
@@ -357,18 +296,18 @@ function MintingInterface() {
       <div className="text-center">
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 max-w-md mx-auto">
           <div className="animate-pulse">
-            <h2 className="text-2xl font-bold text-white mb-4">🔄 AutoConnect Working...</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">🔄 Looking for Existing Wallet...</h2>
             <p className="text-gray-300 text-lg mb-4">
-              Attempting to connect to Thirdweb embedded wallet
+              Connecting to your unicorn.eth wallet
             </p>
             <p className="text-gray-400 text-sm mb-6">
-              Factory: 0xD771...48A | Chain: Polygon | Gasless: ✅
+              Only existing smart wallets from polygon.ac can access this lottery
             </p>
             <div className="w-full bg-gray-700 rounded-full h-2">
               <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
             </div>
             <p className="text-xs text-gray-500 mt-4">
-              Timeout in {Math.max(0, 15 - Math.floor((Date.now() - (window.autoConnectStart || Date.now())) / 1000))}s
+              Factory: 0xD771...48A | Client: {clientId?.slice(0, 8)}...
             </p>
           </div>
         </div>
@@ -377,90 +316,23 @@ function MintingInterface() {
   }
 
   return (
+    
     <div className="max-w-4xl mx-auto">
-      {/* Collection Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8">
-        <StatCard 
-          title="Minted" 
-          value={`${totalSupply?.toString() || "0"} / ${maxSupply?.toString() || "10000"}`}
-          subtitle={`${supplyPercentage}% complete`}
-        />
-        <StatCard 
-          title="Your Status" 
-          value={hasMinted ? "Claimed ✅" : "Not Claimed"} 
-          className={hasMinted ? "text-green-400" : "text-gray-400"}
-        />
-        <StatCard 
-          title="Access Level" 
-          value={isAuthorizedUnicornWallet ? "Authorized ✅" : "Unauthorized ❌"} 
-          className={isAuthorizedUnicornWallet ? "text-green-400" : "text-red-400"}
-        />
-        <StatCard 
-          title="Drawing Status" 
-          value={isMintingActive ? "Active" : "Ended"} 
-          className={isMintingActive ? "text-green-400" : "text-red-400"}
-        />
-        <StatCard 
-          title="Contract Status" 
-          value={isPaused ? "Paused" : "Active"} 
-          className={isPaused ? "text-yellow-400" : "text-green-400"}
-        />
-        <StatCard 
-          title="Time Remaining" 
-          value={countdown || "Loading..."} 
-          className="text-yellow-400"
-        />
-      </div>
-
-      {/* Drawing Date Info */}
-      {drawingDate && (
-        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-lg p-6 mb-8">
-          <h3 className="text-xl font-bold text-yellow-300 mb-2 flex items-center">
-            ⏰ Drawing Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-gray-300">Drawing Date:</p>
-              <p className="text-white font-semibold">
-                {new Date(parseInt(drawingDate.toString()) * 1000).toLocaleString()}
-              </p>
-            </div>
-            <div>
-              <p className="text-gray-300">Status:</p>
-              <p className={`font-semibold ${isMintingActive ? 'text-green-400' : 'text-red-400'}`}>
-                {isMintingActive ? '🟢 Claiming Active' : '🔴 Claiming Ended'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Claiming Section */}
+            {/* Claiming Section */}
       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
-        <h2 className="text-3xl font-bold text-white mb-6 text-center">
-          Claim Your Soul-Bound NFT
-        </h2>
         
         {checkingMinted ? (
           <div className="text-center text-white">Checking claim status...</div>
         ) : !isAuthorizedUnicornWallet ? (
           <div className="text-center">
             <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 mb-4">
-              <h3 className="text-xl font-semibold text-red-300 mb-2">🚫 Access Denied</h3>
+              <h3 className="text-xl font-semibold text-red-300 mb-2">🚫 No Existing Wallet Found</h3>
               <p className="text-red-200 mb-2">
-                This NFT claiming is restricted to pre-authorized unicorn.eth embedded wallets only.
+                This lottery is only available to users with previously issued from unicorn.eth.
               </p>
               <p className="text-red-200 text-sm mb-4">
-                You must access this page through the official unicorn.eth autoconnect link.
+                You must have received a smart wallet from our system to participate.
               </p>
-              <div className="bg-red-700/30 rounded-lg p-4 text-left">
-                <p className="text-red-200 text-sm font-semibold mb-2">Expected Access Method:</p>
-                <ul className="text-red-200 text-xs space-y-1">
-                  <li>• Must come from unicorn.eth platform</li>
-                  <li>• Must use embedded wallet autoconnect</li>
-                  <li>• Manual wallet connections are not allowed</li>
-                </ul>
-              </div>
             </div>
           </div>
         ) : isPaused ? (
@@ -468,7 +340,7 @@ function MintingInterface() {
             <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-yellow-300 mb-2">⏸️ Claiming Paused</h3>
               <p className="text-yellow-200">
-                NFT claiming has been temporarily paused by the contract owner.
+                Claiming has been temporarily paused by the contract owner.
               </p>
             </div>
           </div>
@@ -477,7 +349,7 @@ function MintingInterface() {
             <div className="bg-red-500/20 border border-red-500 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-red-300 mb-2">🚫 Claiming Period Ended</h3>
               <p className="text-red-200">
-                The drawing date has passed and NFT claiming is no longer available.
+                The drawing date has passed and PolyPrize claiming is no longer available.
               </p>
               <p className="text-red-200 mt-2">
                 Drawing Date: {drawingDate ? new Date(parseInt(drawingDate.toString()) * 1000).toLocaleString() : 'Loading...'}
@@ -489,7 +361,7 @@ function MintingInterface() {
             <div className="bg-orange-500/20 border border-orange-500 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-orange-300 mb-2">🎯 Max Supply Reached</h3>
               <p className="text-orange-200">
-                All {maxSupply.toString()} NFTs have been claimed!
+                All {maxSupply.toString()} Prizes have been claimed!
               </p>
             </div>
           </div>
@@ -497,31 +369,15 @@ function MintingInterface() {
           <div className="text-center">
             <div className="bg-green-500/20 border border-green-500 rounded-lg p-4 mb-4">
               <p className="text-green-300">
-                You have already claimed your soul-bound NFT! 🎉
+                You have claimed your PolyPrize! 🎉
               </p>
             </div>
           </div>
         ) : (
           <div className="text-center">
             <div className="bg-green-500/20 border border-green-500 rounded-lg p-6 mb-6">
-              <h3 className="text-xl font-semibold text-green-300 mb-3">✅ Authorized via AutoConnect</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="bg-white/10 rounded p-3">
-                  <p className="font-semibold text-white">Soul-Bound Features:</p>
-                  <ul className="text-green-200 space-y-1 mt-2">
-                    <li>• Unique to your wallet</li>
-                    <li>• Cannot be transferred</li>
-                    <li>• One claim per wallet</li>
-                  </ul>
-                </div>
-                <div className="bg-white/10 rounded p-3">
-                  <p className="font-semibold text-white">Your Access:</p>
-                  <ul className="text-green-200 space-y-1 mt-2">
-                    <li>• Unicorn.eth wallet ✅</li>
-                    <li>• Auto-connected ✅</li>
-                    <li>• Gasless claiming ✅</li>
-                  </ul>
-                </div>
+ 
               </div>
             </div>
             
@@ -541,17 +397,58 @@ function MintingInterface() {
           </div>
         )}
       </div>
-
-      {/* Debug Information (for development) */}
-      {window.location.hostname === 'localhost' && (
-        <div className="bg-gray-800/50 rounded-lg p-4 text-xs text-gray-400">
-          <p><strong>Debug Info (localhost only):</strong></p>
-          <p>Connection State: {connectionState}</p>
-          <p>Authorized: {isAuthorizedUnicornWallet.toString()}</p>
-          <p>Active Wallet: {localStorage.getItem('thirdweb:active-wallet')}</p>
-          <p>URL Params: {window.location.search}</p>
+            {/* Drawing Date Info */}
+      {drawingDate && (
+        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-lg p-6 mb-8">
+          <h3 className="text-xl font-bold text-yellow-300 mb-2 flex items-center">
+            ⏰ $200 Raffle Details 
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-gray-300">Drawing Date:</p>
+              <p className="text-white font-semibold">
+                {new Date(parseInt(drawingDate.toString()) * 1000).toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-gray-300">Status:</p>
+              <p className={`font-semibold ${isMintingActive ? 'text-green-400' : 'text-red-400'}`}>
+                {isMintingActive ? '🟢 Claiming Active' : '🔴 Claiming Ended'}
+              </p>
+            </div>
+                       <div>
+              <p className="text-gray-300">Time Remaining:</p>
+              <p className={`font-semibold ${isMintingActive ? 'text-green-400' : 'text-red-400'}`}>
+                {countdown || "Loading..."} 
+              </p>
+            </div>
+ 
+          </div>
+          
         </div>
+
+        
       )}
+
+            {/* Connection Status Display */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 max-w-md mx-auto mb-4">
+        {account ? (
+          <div className="text-green-400">
+            <p className="font-semibold">✅ Connected</p>
+            <p className="text-sm text-gray-300">
+              {account.address?.slice(0,6)}...{account.address?.slice(-4)}
+            </p>
+          </div>
+        ) : (
+          <div className="text-yellow-400">
+            <p className="font-semibold">🔄 Connecting...</p>
+            <p className="text-sm text-gray-300">
+              AutoConnect in progress
+            </p>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
