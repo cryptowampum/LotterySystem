@@ -4,22 +4,37 @@ import {
   ConnectButton, 
   useActiveAccount, 
   useReadContract,
-  useSendTransaction
+  useSendTransaction,
+  AutoConnect
 } from "thirdweb/react";
 import { createThirdwebClient, getContract, prepareContractCall } from "thirdweb";
+import { inAppWallet } from "thirdweb/wallets";
 import { polygon } from "thirdweb/chains";
 import './index.css';
 
 // Create ThirdWeb client with error handling
 const clientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID;
+const factoryAccountAddress = import.meta.env.VITE_FACTORY_ACCOUNT_ADDRESS;
 
 if (!clientId) {
   console.error("VITE_THIRDWEB_CLIENT_ID is not set in environment variables");
 }
-
+if (!factoryAccountAddress) {
+  console.error("VITE_FACTORY_ACCOUNT_ADDRESS is not set in environment variables");
+}
 const client = createThirdwebClient({
   clientId: clientId || "",
 });
+
+const wallets = [
+  inAppWallet({
+    smartAccount: {
+      factoryAddress: factoryAccountAddress || "0xD771615c873ba5a2149D5312448cE01D677Ee48A",
+      chain: polygon,
+      gasless: true,
+    }
+  })
+];
 
 console.log("ThirdWeb Client ID:", clientId ? `${clientId.slice(0, 8)}...` : "NOT SET");
 
@@ -41,6 +56,7 @@ const contract = getContract({
 function App() {
   return (
     <ThirdwebProvider>
+      <AutoConnect client={client} wallets={wallets} />
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
         <div className="container mx-auto px-4 py-8">
           <Header />
@@ -66,26 +82,11 @@ function Header() {
         🔐 Unicorn.eth authorized wallets only • Gasless claiming
       </p>
       <div className="flex justify-center">
-        <ConnectButton
-          client={client}
-          chain={polygon}
-          theme="dark"
-          connectButton={{
-            label: account ? `Connected: ${account.address?.slice(0,6)}...${account.address?.slice(-4)}` : "Unicorn.eth Wallet"
-          }}
-          connectModal={{
-            size: "wide",
-            title: "Unicorn.eth Wallet Required",
-            showThirdwebBranding: false,
-          }}
-          accountAbstraction={{
-            chain: polygon,
-            sponsorGas: true, // Enable gasless transactions
-          }}
-          autoConnect={{
-            timeout: 15000,
-          }}
-        />
+
+        <p className="text-xl text-gray-300 mb-2">
+         account ? `Connected: ${account.address?.slice(0,6)}...${account.address?.slice(-4)}` : "Unicorn.eth Wallet"
+        </p>
+ 
       </div>
     </div>
   );
@@ -181,9 +182,9 @@ function MintingInterface() {
     
     // Check referrer to see if they came from unicorn.eth
     console.log("Document referrer:", document.referrer);
-    const cameFromUnicorn = document.referrer.includes('unicorn.eth') || 
-                           window.location.hostname.includes('unicorn.eth') ||
-                           window.location.href.includes('unicorn.eth');
+    const cameFromUnicorn = document.referrer.includes('uunicorn-account.com') || 
+                           window.location.hostname.includes('unicorn-account.com') ||
+                           window.location.href.includes('unicorn-account.com');
     console.log("Came from unicorn.eth:", cameFromUnicorn);
     
     // Check localStorage for ThirdWeb embedded wallet session
