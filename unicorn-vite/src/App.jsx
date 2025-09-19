@@ -373,9 +373,6 @@ function MintingInterface() {
             <div className="w-full bg-gray-300 rounded-full h-2">
               <div className="h-2 rounded-full animate-pulse" style={{ width: '60%', backgroundColor: '#A83DCC' }}></div>
             </div>
-            <p className="text-xs text-gray-500 mt-4">
-              Factory: 0xD771...48A | Client: {clientId?.slice(0, 8)}...
-            </p>
           </div>
         </div>
       </div>
@@ -395,10 +392,8 @@ function MintingInterface() {
             <div className="bg-red-100 border border-red-300 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-red-800 mb-2">🚫 No Existing Wallet Found</h3>
               <p className="text-red-700 mb-2">
-                This lottery is only available to users with previously issued from unicorn.eth.
-              </p>
-              <p className="text-red-700 text-sm mb-4">
-                You must have received a smart wallet from our system to participate.
+                This lottery is only available to users with previously issued from unicorn.eth via Polygon Accounts.<br/>
+                Sign up at <a href="https://polygon.ac/" className="text-blue-500 hover:underline">https://polygon.ac/</a> to participate and claim your PolyPrize.
               </p>
             </div>
           </div>
