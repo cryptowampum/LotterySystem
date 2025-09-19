@@ -1,0 +1,26 @@
+{
+  "buildCommand": "cd unicorn-vite && npm run build",
+  "outputDirectory": "unicorn-vite/dist",
+  "installCommand": "cd unicorn-vite && npm install --legacy-peer-deps",
+  "framework": "vite",
+  "functions": {
+    "app/api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}
