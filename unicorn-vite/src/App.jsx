@@ -46,7 +46,7 @@ const isValidAddress = (address) => {
 const supportedWallets = [
   inAppWallet({
     smartAccount: {
-      factoryAddress: factoryAddress || "0xD771615c873ba5a2149D5312448cE01D677Ee48A", // Unicorn factory address
+      factoryAddress: factoryAddress , // Unicorn factory address
       chain: polygon,
       gasless: true,
       sponsorGas: true,
@@ -436,13 +436,7 @@ function MintingInterface() {
             </div>
           </div>
         ) : (
-          <div className="text-center">
-            <div className="border border-purple-300 rounded-lg p-6 mb-6" style={{ backgroundColor: '#FBE9FB' }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
- 
-              </div>
-            </div>
-            
+          <div className="text-center">            
             <button
               onClick={handleMint}
               disabled={isMinting || isPaused || !isAuthorizedUnicornWallet}
