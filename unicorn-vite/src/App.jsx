@@ -498,11 +498,6 @@ function MintingInterface({ shouldAutoConnect }) {
           </div>
         ) : (
           <div className="text-center">
-            <div className="border border-purple-300 rounded-lg p-6 mb-6" style={{ backgroundColor: '#FBE9FB' }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
- 
-              </div>
-            </div>
             
             <button
               onClick={handleMint}
