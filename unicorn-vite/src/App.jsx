@@ -133,7 +133,7 @@ function Header() {
         🦄 <br/>Claim your PolyPrize
       </h1>
       <p className="text-xl text-gray-700 mb-2">
-        Click "Claim" below to receive your PolyPrize NFT and be entered to win the $200 raffle.
+        Click "Claim" below to receive your PolyPrize NFT and be entered to win the $100 raffle.
       </p>
       <p className="text-sm text-purple-700 mb-8">
         🔐 Existing polygon.ac members only • Claim for free 
@@ -392,7 +392,7 @@ function MintingInterface() {
             <div className="bg-red-100 border border-red-300 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-red-800 mb-2">🚫 No Existing Wallet Found</h3>
               <p className="text-red-700 mb-2">
-                This lottery is only available to users with previously issued from unicorn.eth via Polygon Accounts.<br/>
+                This is the second raffle from unicorn.eth and is only available to users with wallets issued from unicorn.eth via Polygon Accounts.<br/>
                 Sign up at <a href="https://polygon.ac/" className="text-blue-500 hover:underline">https://polygon.ac/</a> to participate and claim your PolyPrize.
               </p>
             </div>
@@ -423,7 +423,7 @@ function MintingInterface() {
             <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-orange-800 mb-2">🎯 Max Supply Reached</h3>
               <p className="text-orange-700">
-                All {maxSupply.toString()} Prizes have been claimed!
+                All {maxSupply.toString()} PolyPrizes have been claimed!
               </p>
             </div>
           </div>
@@ -432,6 +432,8 @@ function MintingInterface() {
             <div className="border border-purple-300 rounded-lg p-4 mb-4" style={{ backgroundColor: '#FBE9FB' }}>
               <p className="text-purple-800">
                 You have claimed your PolyPrize! 🎉
+                <br/>
+                If you claimed after Oct 1, 2025, you are eligible for the second raffle.
               </p>
             </div>
           </div>
@@ -458,7 +460,7 @@ function MintingInterface() {
       {drawingDate && (
         <div className="border border-purple-300 rounded-lg p-6 mb-8" style={{ backgroundColor: '#FBE9FB' }}>
           <h3 className="text-xl font-bold text-purple-800 mb-2 flex items-center">
-            ⏰ $200 Raffle Details 
+            ⏰ $100 Raffle Details 
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -494,22 +496,22 @@ function MintingInterface() {
           <SocialShareButton 
             platform="LinkedIn" 
             url="https://www.linkedin.com/sharing/share-offsite/?url=https://app.polygon.ac"
-            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac "
+            text="I claimed my free PolyPrize Collectible and entered the $100 giveaway at https://app.polygon.ac "
           />
           <SocialShareButton 
             platform="Twitter" 
-            url="https://twitter.com/intent/tweet?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24200%20giveaway%20at%20https%3A//app.polygon.ac%20@MyUnicornAcct%20@0xPolygon"
-            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac"
+            url="https://twitter.com/intent/tweet?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24100%20giveaway%20at%20https%3A//app.polygon.ac%20@MyUnicornAcct%20@0xPolygon"
+            text="I claimed my free PolyPrize Collectible and entered the $100 giveaway at https://app.polygon.ac"
           />
           <SocialShareButton 
             platform="Farcaster" 
-            url="https://warpcast.com/~/compose?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24200%20giveaway%20at%20https%3A//app.polygon.ac%20@unicornslfg"
-            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac"
+            url="https://warpcast.com/~/compose?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24100%20giveaway%20at%20https%3A//app.polygon.ac%20@unicornslfg"
+            text="I claimed my free PolyPrize Collectible and entered the $100 giveaway at https://app.polygon.ac"
           />
           <SocialShareButton 
             platform="Bluesky" 
-            url="https://bsky.app/intent/compose?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24200%20giveaway%20at%20https%3A//app.polygon.ac%20@myunicornaccount"
-            text="I claimed my free PolyPrize Collectible and entered the $200 giveaway at https://app.polygon.ac"
+            url="https://bsky.app/intent/compose?text=I%20claimed%20my%20free%20PolyPrize%20Collectible%20and%20entered%20the%20%24100%20giveaway%20at%20https%3A//app.polygon.ac%20@myunicornaccount"
+            text="I claimed my free PolyPrize Collectible and entered the $100 giveaway at https://app.polygon.ac"
           />
         </div>
       </div>
