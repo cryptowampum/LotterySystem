@@ -1,3 +1,4 @@
+//Lovingly coded by @cryptowampum and Claude AI
 import React, { useState, useEffect } from 'react';
 import { 
   ThirdwebProvider, 
@@ -82,6 +83,9 @@ const contract = getContract({
 });
 
 function App() {
+  // Check for autoconnect parameters in URL
+  const [shouldAutoConnect, setShouldAutoConnect] = useState(false);
+
   // Initialize Google Analytics on app start
   useEffect(() => {
     initGA();
@@ -93,31 +97,58 @@ function App() {
     window.autoConnectStart = Date.now();
   }, []);
 
+  // Check URL parameters to determine if AutoConnect should run
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const walletId = urlParams.get('walletId');
+    const authCookie = urlParams.get('authCookie');
+    const autoConnect = urlParams.get('autoConnect');
+    
+    // Only enable AutoConnect if proper parameters are present
+    const hasAutoConnectParams = (
+      (walletId === 'inApp' && authCookie) || 
+      (autoConnect === 'true')
+    );
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('AutoConnect check:', {
+        walletId,
+        hasAuthCookie: !!authCookie,
+        autoConnect,
+        shouldAutoConnect: hasAutoConnectParams
+      });
+    }
+    
+    setShouldAutoConnect(hasAutoConnectParams);
+  }, []);
+
   return (
     <ThirdwebProvider>
-      {/* AutoConnect with proper Unicorn configuration */}
-      <AutoConnect 
-        client={client} 
-        wallets={supportedWallets}
-        timeout={15000} // Give more time for connection
-        onConnect={(wallet) => {
-          console.log("🦄 AutoConnect successful:", wallet);
-          console.log("Address:", wallet.getAddress ? wallet.getAddress() : 'Getting address...');
-          console.log("Chain:", wallet.getChain ? wallet.getChain()?.name : 'Getting chain...');
-          
-          // Track successful wallet connection
-          const address = wallet.getAddress ? wallet.getAddress() : '';
-          trackWalletConnection(address, true);
-        }}
-        onError={(error) => {
-          console.error("❌ AutoConnect failed:", error);
-          trackWalletConnection('', false);
-        }}
-      />
+      {/* Only render AutoConnect if proper parameters are present */}
+      {shouldAutoConnect && (
+        <AutoConnect 
+          client={client} 
+          wallets={supportedWallets}
+          timeout={15000}
+          onConnect={(wallet) => {
+            console.log("🦄 AutoConnect successful:", wallet);
+            console.log("Address:", wallet.getAddress ? wallet.getAddress() : 'Getting address...');
+            console.log("Chain:", wallet.getChain ? wallet.getChain()?.name : 'Getting chain...');
+            
+            // Track successful wallet connection
+            const address = wallet.getAddress ? wallet.getAddress() : '';
+            trackWalletConnection(address, true);
+          }}
+          onError={(error) => {
+            console.error("❌ AutoConnect failed:", error);
+            trackWalletConnection('', false);
+          }}
+        />
+      )}
       <div className="min-h-screen bg-white">
         <div className="container mx-auto px-4 py-8">
           <Header />
-          <MintingInterface />
+          <MintingInterface shouldAutoConnect={shouldAutoConnect} />
         </div>
       </div>
     </ThirdwebProvider>
@@ -142,14 +173,14 @@ function Header() {
   );
 }
 
-function MintingInterface() {
+function MintingInterface({ shouldAutoConnect }) {
   const account = useActiveAccount();
   const address = account?.address;
   const wallet = useActiveWallet();
   
   // Track authorization and connection state
   const [isAuthorizedUnicornWallet, setIsAuthorizedUnicornWallet] = useState(false);
-  const [connectionState, setConnectionState] = useState("checking"); // checking, unauthorized, authorized
+  const [connectionState, setConnectionState] = useState(shouldAutoConnect ? "checking" : "no_autoconnect");
   const [mintStatus, setMintStatus] = useState("");
   const [countdown, setCountdown] = useState("");
   // cooldown
@@ -373,6 +404,34 @@ function MintingInterface() {
             <div className="w-full bg-gray-300 rounded-full h-2">
               <div className="h-2 rounded-full animate-pulse" style={{ width: '60%', backgroundColor: '#A83DCC' }}></div>
             </div>
+            <p className="text-xs text-gray-500 mt-4">
+              Factory: 0xD771...48A | Client: {clientId?.slice(0, 8)}...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message when AutoConnect parameters are missing
+  if (connectionState === "no_autoconnect") {
+    return (
+      <div className="text-center">
+        <div className="bg-gray-100 rounded-lg p-8 max-w-md mx-auto border border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">🔐 Access Required</h2>
+          <p className="text-gray-700 text-lg mb-4">
+            This PolyPrize lottery is only accessible through the official <a href="https://polycon.ac">polygon.ac portal</a>.
+          </p>
+          <p className="text-gray-600 text-sm mb-6">
+            You must access this page from your polygon.ac account dashboard to participate.
+          </p>
+          <div className="bg-purple-100 border border-purple-300 rounded-lg p-4 text-left" style={{ backgroundColor: '#FBE9FB' }}>
+            <p className="text-purple-800 text-sm font-semibold mb-2">How to Access:</p>
+            <ul className="text-purple-700 text-sm space-y-1">
+              <li>• Log in to your <a href="https://polycon.ac">polygon.ac</a> account</li>
+              <li>• Navigate to the PolyPrize section</li>
+              <li>• Click the official claim link</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -392,8 +451,10 @@ function MintingInterface() {
             <div className="bg-red-100 border border-red-300 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-red-800 mb-2">🚫 No Existing Wallet Found</h3>
               <p className="text-red-700 mb-2">
-                This is the second raffle from unicorn.eth and is only available to users with wallets issued from unicorn.eth via Polygon Accounts.<br/>
-                Sign up at <a href="https://polygon.ac/" className="text-blue-500 hover:underline">https://polygon.ac/</a> to participate and claim your PolyPrize.
+                This lottery is only available to users with a valid Polygon.ac account.
+              </p>
+              <p className="text-red-700 text-sm mb-4">
+                You must have received a smart wallet from our system to participate.
               </p>
             </div>
           </div>
@@ -423,7 +484,7 @@ function MintingInterface() {
             <div className="bg-orange-100 border border-orange-300 rounded-lg p-6 mb-4">
               <h3 className="text-xl font-semibold text-orange-800 mb-2">🎯 Max Supply Reached</h3>
               <p className="text-orange-700">
-                All {maxSupply.toString()} PolyPrizes have been claimed!
+                All {maxSupply.toString()} Prizes have been claimed!
               </p>
             </div>
           </div>
@@ -432,13 +493,17 @@ function MintingInterface() {
             <div className="border border-purple-300 rounded-lg p-4 mb-4" style={{ backgroundColor: '#FBE9FB' }}>
               <p className="text-purple-800">
                 You have claimed your PolyPrize! 🎉
-                <br/>
-                If you claimed after Oct 1, 2025, you are eligible for the second raffle.
               </p>
             </div>
           </div>
         ) : (
-          <div className="text-center">            
+          <div className="text-center">
+            <div className="border border-purple-300 rounded-lg p-6 mb-6" style={{ backgroundColor: '#FBE9FB' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+ 
+              </div>
+            </div>
+            
             <button
               onClick={handleMint}
               disabled={isMinting || isPaused || !isAuthorizedUnicornWallet}
@@ -460,11 +525,11 @@ function MintingInterface() {
       {drawingDate && (
         <div className="border border-purple-300 rounded-lg p-6 mb-8" style={{ backgroundColor: '#FBE9FB' }}>
           <h3 className="text-xl font-bold text-purple-800 mb-2 flex items-center">
-            ⏰ $100 Raffle Details 
+            ⏰ $100 Raffle Details (Second PolyPrize Drawing)
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <p className="text-gray-700">Drawing Date:</p>
+              <p className="text-gray-700">Second Drawing Date:</p>
               <p className="text-gray-900 font-semibold">
                 {new Date(parseInt(drawingDate.toString()) * 1000).toLocaleString()}
               </p>
