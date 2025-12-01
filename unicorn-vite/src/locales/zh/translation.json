@@ -1,0 +1,79 @@
+{
+  "header": {
+    "title": "领取您的 {{appName}}",
+    "description": "点击下方的\"领取\"按钮，获取您的 {{appName}} NFT 并参与 {{prizeAmount}} 抽奖。",
+    "accessNote": "仅限 {{platformName}} 现有会员",
+    "claimFree": "免费领取"
+  },
+  "connection": {
+    "lookingForWallet": "正在查找现有钱包...",
+    "connectingToWallet": "正在连接您的钱包",
+    "onlyExistingWallets": "只有 {{platformName}} 的现有智能钱包才能参与此抽奖",
+    "factoryInfo": "工厂: {{factory}} | 客户端: {{client}}"
+  },
+  "access": {
+    "required": "需要访问权限",
+    "onlyThroughPortal": "此 {{appName}} 抽奖只能通过 {{platformName}} 官方门户访问。",
+    "mustAccessFromDashboard": "您必须从您的 {{platformName}} 账户仪表板访问此页面才能参与。",
+    "howToAccess": "如何访问：",
+    "step1": "登录您的 {{platformName}} 账户",
+    "step2": "导航到 {{appName}} 部分",
+    "step3": "点击官方领取链接"
+  },
+  "claim": {
+    "checkingStatus": "正在检查领取状态...",
+    "button": "领取 NFT",
+    "claiming": "领取中...",
+    "claimingYourPrize": "正在领取您的 {{appName}}...",
+    "success": "领取成功！",
+    "alreadyClaimed": "您已经领取了您的 {{appName}}！",
+    "waitBeforeRetry": "请稍候再试",
+    "accessDenied": "访问被拒绝 - 未授权的钱包",
+    "ensureConnected": "请确保您的钱包已连接",
+    "transactionFailed": "交易失败。请重试。"
+  },
+  "errors": {
+    "noWallet": "未找到现有钱包",
+    "lotteryOnlyForMembers": "此抽奖仅对拥有有效 {{platformName}} 账户的用户开放。",
+    "mustHaveSmartWallet": "您必须从我们的系统获得智能钱包才能参与。"
+  },
+  "status": {
+    "paused": "领取已暂停",
+    "pausedDescription": "合约所有者已暂时暂停领取。",
+    "ended": "领取期已结束",
+    "endedDescription": "抽奖日期已过，{{appName}} 领取已不再可用。",
+    "drawingDate": "抽奖日期: {{date}}",
+    "maxSupplyReached": "已达到最大供应量",
+    "allClaimed": "所有 {{count}} 个奖品已被领取！"
+  },
+  "drawing": {
+    "title": "{{prizeAmount}} 抽奖详情 ({{drawingName}})",
+    "drawingDate": "抽奖日期：",
+    "status": "状态：",
+    "active": "领取进行中",
+    "ended": "领取已结束",
+    "timeRemaining": "剩余时间：",
+    "loading": "加载中...",
+    "hasEnded": "抽奖已结束"
+  },
+  "social": {
+    "sharePrompt": "分享您的领取：",
+    "shareMessage": "我在 {{url}} 免费领取了 {{appName}} 收藏品并参与了 {{prizeAmount}} 抽奖"
+  },
+  "connectionStatus": {
+    "connected": "已连接",
+    "connecting": "连接中...",
+    "autoConnectInProgress": "自动连接进行中"
+  },
+  "theme": {
+    "toggleLight": "切换到浅色模式",
+    "toggleDark": "切换到深色模式"
+  },
+  "language": {
+    "select": "选择语言",
+    "en": "英语",
+    "es": "西班牙语",
+    "zh": "中文",
+    "ja": "日语"
+  }
+}

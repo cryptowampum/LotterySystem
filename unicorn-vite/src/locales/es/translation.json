@@ -1,0 +1,79 @@
+{
+  "header": {
+    "title": "Reclama tu {{appName}}",
+    "description": "Haz clic en \"Reclamar\" abajo para recibir tu NFT {{appName}} y participar en el sorteo de {{prizeAmount}}.",
+    "accessNote": "Solo para miembros existentes de {{platformName}}",
+    "claimFree": "Reclamar gratis"
+  },
+  "connection": {
+    "lookingForWallet": "Buscando billetera existente...",
+    "connectingToWallet": "Conectando a tu billetera",
+    "onlyExistingWallets": "Solo las billeteras inteligentes existentes de {{platformName}} pueden acceder a esta lotería",
+    "factoryInfo": "Fábrica: {{factory}} | Cliente: {{client}}"
+  },
+  "access": {
+    "required": "Acceso Requerido",
+    "onlyThroughPortal": "Esta lotería {{appName}} solo es accesible a través del portal oficial de {{platformName}}.",
+    "mustAccessFromDashboard": "Debes acceder a esta página desde el panel de tu cuenta de {{platformName}} para participar.",
+    "howToAccess": "Cómo Acceder:",
+    "step1": "Inicia sesión en tu cuenta de {{platformName}}",
+    "step2": "Navega a la sección {{appName}}",
+    "step3": "Haz clic en el enlace oficial de reclamo"
+  },
+  "claim": {
+    "checkingStatus": "Verificando estado del reclamo...",
+    "button": "Reclamar NFT",
+    "claiming": "Reclamando...",
+    "claimingYourPrize": "Reclamando tu {{appName}}...",
+    "success": "¡Reclamado exitosamente!",
+    "alreadyClaimed": "¡Ya has reclamado tu {{appName}}!",
+    "waitBeforeRetry": "Por favor espera antes de intentar de nuevo",
+    "accessDenied": "Acceso denegado - billetera no autorizada",
+    "ensureConnected": "Por favor asegúrate de que tu billetera esté conectada",
+    "transactionFailed": "Transacción fallida. Por favor intenta de nuevo."
+  },
+  "errors": {
+    "noWallet": "No se encontró billetera existente",
+    "lotteryOnlyForMembers": "Esta lotería solo está disponible para usuarios con una cuenta válida de {{platformName}}.",
+    "mustHaveSmartWallet": "Debes haber recibido una billetera inteligente de nuestro sistema para participar."
+  },
+  "status": {
+    "paused": "Reclamo Pausado",
+    "pausedDescription": "El reclamo ha sido pausado temporalmente por el propietario del contrato.",
+    "ended": "Período de Reclamo Terminado",
+    "endedDescription": "La fecha del sorteo ha pasado y el reclamo de {{appName}} ya no está disponible.",
+    "drawingDate": "Fecha del Sorteo: {{date}}",
+    "maxSupplyReached": "Suministro Máximo Alcanzado",
+    "allClaimed": "¡Todos los {{count}} premios han sido reclamados!"
+  },
+  "drawing": {
+    "title": "Detalles del Sorteo de {{prizeAmount}} ({{drawingName}})",
+    "drawingDate": "Fecha del Sorteo:",
+    "status": "Estado:",
+    "active": "Reclamo Activo",
+    "ended": "Reclamo Terminado",
+    "timeRemaining": "Tiempo Restante:",
+    "loading": "Cargando...",
+    "hasEnded": "El sorteo ha terminado"
+  },
+  "social": {
+    "sharePrompt": "Comparte tu reclamo:",
+    "shareMessage": "Reclamé mi coleccionable {{appName}} gratis y entré en el sorteo de {{prizeAmount}} en {{url}}"
+  },
+  "connectionStatus": {
+    "connected": "Conectado",
+    "connecting": "Conectando...",
+    "autoConnectInProgress": "Conexión automática en progreso"
+  },
+  "theme": {
+    "toggleLight": "Cambiar a modo claro",
+    "toggleDark": "Cambiar a modo oscuro"
+  },
+  "language": {
+    "select": "Seleccionar idioma",
+    "en": "Inglés",
+    "es": "Español",
+    "zh": "Chino",
+    "ja": "Japonés"
+  }
+}

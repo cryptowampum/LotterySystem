@@ -1,0 +1,79 @@
+{
+  "header": {
+    "title": "Claim your {{appName}}",
+    "description": "Click \"Claim\" below to receive your {{appName}} NFT and be entered to win the {{prizeAmount}} raffle.",
+    "accessNote": "Existing {{platformName}} members only",
+    "claimFree": "Claim for free"
+  },
+  "connection": {
+    "lookingForWallet": "Looking for Existing Wallet...",
+    "connectingToWallet": "Connecting to your wallet",
+    "onlyExistingWallets": "Only existing smart wallets from {{platformName}} can access this lottery",
+    "factoryInfo": "Factory: {{factory}} | Client: {{client}}"
+  },
+  "access": {
+    "required": "Access Required",
+    "onlyThroughPortal": "This {{appName}} lottery is only accessible through the official {{platformName}} portal.",
+    "mustAccessFromDashboard": "You must access this page from your {{platformName}} account dashboard to participate.",
+    "howToAccess": "How to Access:",
+    "step1": "Log in to your {{platformName}} account",
+    "step2": "Navigate to the {{appName}} section",
+    "step3": "Click the official claim link"
+  },
+  "claim": {
+    "checkingStatus": "Checking claim status...",
+    "button": "Claim NFT",
+    "claiming": "Claiming...",
+    "claimingYourPrize": "Claiming your {{appName}}...",
+    "success": "Successfully claimed!",
+    "alreadyClaimed": "You have claimed your {{appName}}!",
+    "waitBeforeRetry": "Please wait before trying again",
+    "accessDenied": "Access denied - unauthorized wallet",
+    "ensureConnected": "Please ensure your wallet is connected",
+    "transactionFailed": "Transaction failed. Please try again."
+  },
+  "errors": {
+    "noWallet": "No Existing Wallet Found",
+    "lotteryOnlyForMembers": "This lottery is only available to users with a valid {{platformName}} account.",
+    "mustHaveSmartWallet": "You must have received a smart wallet from our system to participate."
+  },
+  "status": {
+    "paused": "Claiming Paused",
+    "pausedDescription": "Claiming has been temporarily paused by the contract owner.",
+    "ended": "Claiming Period Ended",
+    "endedDescription": "The drawing date has passed and {{appName}} claiming is no longer available.",
+    "drawingDate": "Drawing Date: {{date}}",
+    "maxSupplyReached": "Max Supply Reached",
+    "allClaimed": "All {{count}} Prizes have been claimed!"
+  },
+  "drawing": {
+    "title": "{{prizeAmount}} Raffle Details ({{drawingName}})",
+    "drawingDate": "Drawing Date:",
+    "status": "Status:",
+    "active": "Claiming Active",
+    "ended": "Claiming Ended",
+    "timeRemaining": "Time Remaining:",
+    "loading": "Loading...",
+    "hasEnded": "Drawing has ended"
+  },
+  "social": {
+    "sharePrompt": "Share your claim:",
+    "shareMessage": "I claimed my free {{appName}} Collectible and entered the {{prizeAmount}} giveaway at {{url}}"
+  },
+  "connectionStatus": {
+    "connected": "Connected",
+    "connecting": "Connecting...",
+    "autoConnectInProgress": "AutoConnect in progress"
+  },
+  "theme": {
+    "toggleLight": "Switch to light mode",
+    "toggleDark": "Switch to dark mode"
+  },
+  "language": {
+    "select": "Select language",
+    "en": "English",
+    "es": "Spanish",
+    "zh": "Chinese",
+    "ja": "Japanese"
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "header": {
+    "title": "{{appName}}を請求する",
+    "description": "下の「請求」をクリックして、{{appName}} NFTを受け取り、{{prizeAmount}}の抽選に参加しましょう。",
+    "accessNote": "{{platformName}}の既存メンバー限定",
+    "claimFree": "無料で請求"
+  },
+  "connection": {
+    "lookingForWallet": "既存のウォレットを検索中...",
+    "connectingToWallet": "ウォレットに接続中",
+    "onlyExistingWallets": "{{platformName}}の既存スマートウォレットのみがこの抽選にアクセスできます",
+    "factoryInfo": "ファクトリー: {{factory}} | クライアント: {{client}}"
+  },
+  "access": {
+    "required": "アクセス権が必要です",
+    "onlyThroughPortal": "この{{appName}}抽選は、{{platformName}}公式ポータルからのみアクセス可能です。",
+    "mustAccessFromDashboard": "参加するには、{{platformName}}アカウントダッシュボードからこのページにアクセスする必要があります。",
+    "howToAccess": "アクセス方法：",
+    "step1": "{{platformName}}アカウントにログイン",
+    "step2": "{{appName}}セクションに移動",
+    "step3": "公式請求リンクをクリック"
+  },
+  "claim": {
+    "checkingStatus": "請求状況を確認中...",
+    "button": "NFTを請求",
+    "claiming": "請求中...",
+    "claimingYourPrize": "{{appName}}を請求中...",
+    "success": "請求成功！",
+    "alreadyClaimed": "{{appName}}は既に請求済みです！",
+    "waitBeforeRetry": "再試行する前にお待ちください",
+    "accessDenied": "アクセス拒否 - 未承認のウォレット",
+    "ensureConnected": "ウォレットが接続されていることを確認してください",
+    "transactionFailed": "トランザクション失敗。もう一度お試しください。"
+  },
+  "errors": {
+    "noWallet": "既存のウォレットが見つかりません",
+    "lotteryOnlyForMembers": "この抽選は、有効な{{platformName}}アカウントを持つユーザーのみが利用できます。",
+    "mustHaveSmartWallet": "参加するには、当社のシステムからスマートウォレットを受け取っている必要があります。"
+  },
+  "status": {
+    "paused": "請求一時停止中",
+    "pausedDescription": "コントラクトオーナーにより請求が一時的に停止されています。",
+    "ended": "請求期間終了",
+    "endedDescription": "抽選日が過ぎ、{{appName}}の請求は利用できなくなりました。",
+    "drawingDate": "抽選日: {{date}}",
+    "maxSupplyReached": "最大供給量に到達",
+    "allClaimed": "全{{count}}個の賞品が請求されました！"
+  },
+  "drawing": {
+    "title": "{{prizeAmount}}抽選詳細 ({{drawingName}})",
+    "drawingDate": "抽選日：",
+    "status": "ステータス：",
+    "active": "請求受付中",
+    "ended": "請求終了",
+    "timeRemaining": "残り時間：",
+    "loading": "読み込み中...",
+    "hasEnded": "抽選は終了しました"
+  },
+  "social": {
+    "sharePrompt": "請求をシェア：",
+    "shareMessage": "{{url}}で無料の{{appName}}コレクティブルを請求し、{{prizeAmount}}の抽選に参加しました"
+  },
+  "connectionStatus": {
+    "connected": "接続済み",
+    "connecting": "接続中...",
+    "autoConnectInProgress": "自動接続中"
+  },
+  "theme": {
+    "toggleLight": "ライトモードに切り替え",
+    "toggleDark": "ダークモードに切り替え"
+  },
+  "language": {
+    "select": "言語を選択",
+    "en": "英語",
+    "es": "スペイン語",
+    "zh": "中国語",
+    "ja": "日本語"
+  }
+}
