@@ -1,8 +1,8 @@
 {
   "header": {
     "title": "领取您的 {{appName}}",
-    "description": "点击下方的\"领取\"按钮，获取您的 {{appName}} NFT 并参与 {{prizeAmount}} 抽奖。",
-    "accessNote": "仅限 {{platformName}} 现有会员",
+    "description": "点击下方的\"领取\"按钮，获取您的 {{appName}} NFT。<br/><br/>要参加抽奖，请领取此NFT并使用您在ETHDenver注册时相同的电子邮件在<a href='https://app.arbitrum.ac?utm_source=raffle' target='_blank'>Arbitrum Accounts</a>注册。<br/><br/>您将有机会赢得 {{prizeAmount}} 大奖和每日赠品。<br/><br/>每日赠品在Unicorn.eth展位于中午12:55 PM MT举行。您必须在场才能获奖。<br/><br/>大奖得主将通过电子邮件通知。",
+    "accessNote": "仅限 {{platformName}} 现有用户",
     "claimFree": "免费领取"
   },
   "connection": {
@@ -22,7 +22,7 @@
   },
   "claim": {
     "checkingStatus": "正在检查领取状态...",
-    "button": "领取 NFT",
+    "button": "领取",
     "claiming": "领取中...",
     "claimingYourPrize": "正在领取您的 {{appName}}...",
     "success": "领取成功！",
@@ -58,7 +58,7 @@
   },
   "social": {
     "sharePrompt": "分享您的领取：",
-    "shareMessage": "我在 {{url}} 免费领取了 {{appName}} 收藏品并参与了 {{prizeAmount}} 抽奖"
+    "shareMessage": "我在 {{url}} 免费领取了 {{appName}} 收藏品并参与了 {{prizeAmount}} 赠品活动"
   },
   "connectionStatus": {
     "connected": "已连接",
@@ -75,5 +75,9 @@
     "es": "西班牙语",
     "zh": "中文",
     "ja": "日语"
+  },
+  "footer": {
+    "broughtToYouBy": "由<a href='https://myunicornaccount.com'>Unicorn.eth</a>提供，助力ETHDenver 2025和2026。",
+    "copyright": "© 2026 Unicorns, Inc."
   }
 }

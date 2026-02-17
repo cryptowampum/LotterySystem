@@ -1,8 +1,8 @@
 {
   "header": {
     "title": "Reclama tu {{appName}}",
-    "description": "Haz clic en \"Reclamar\" abajo para recibir tu NFT {{appName}} y participar en el sorteo de {{prizeAmount}}.",
-    "accessNote": "Solo para miembros existentes de {{platformName}}",
+    "description": "Haz clic en \"Reclamar\" abajo para recibir tu NFT {{appName}}.<br/><br/>Para participar en el sorteo, reclama este NFT y regístrate con el mismo correo electrónico que usaste para ETHDenver en <a href='https://app.arbitrum.ac?utm_source=raffle' target='_blank'>Arbitrum Accounts</a>.<br/><br/>Participarás por el gran premio de {{prizeAmount}} y sorteos diarios.<br/><br/>Los sorteos diarios se realizan en el stand de Unicorn.eth a las 12:55 PM MT. Debes estar presente para ganar.<br/><br/>El ganador del gran premio será notificado por correo electrónico.",
+    "accessNote": "Solo para usuarios existentes de {{platformName}}",
     "claimFree": "Reclamar gratis"
   },
   "connection": {
@@ -22,7 +22,7 @@
   },
   "claim": {
     "checkingStatus": "Verificando estado del reclamo...",
-    "button": "Reclamar NFT",
+    "button": "Reclamar",
     "claiming": "Reclamando...",
     "claimingYourPrize": "Reclamando tu {{appName}}...",
     "success": "¡Reclamado exitosamente!",
@@ -58,7 +58,7 @@
   },
   "social": {
     "sharePrompt": "Comparte tu reclamo:",
-    "shareMessage": "Reclamé mi coleccionable {{appName}} gratis y entré en el sorteo de {{prizeAmount}} en {{url}}"
+    "shareMessage": "Reclamé mi coleccionable {{appName}} gratis y participé en el sorteo de {{prizeAmount}} en {{url}}"
   },
   "connectionStatus": {
     "connected": "Conectado",
@@ -75,5 +75,9 @@
     "es": "Español",
     "zh": "Chino",
     "ja": "Japonés"
+  },
+  "footer": {
+    "broughtToYouBy": "Presentado por <a href='https://myunicornaccount.com'>Unicorn.eth</a> impulsando ETHDenver 2025 y 2026.",
+    "copyright": "© 2026 Unicorns, Inc."
   }
 }

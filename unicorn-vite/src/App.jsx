@@ -1,6 +1,6 @@
 //Lovingly coded by @cryptowampum and Claude AI
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   ThirdwebProvider,
   useActiveAccount,
@@ -11,7 +11,7 @@ import {
 } from "thirdweb/react";
 import { createThirdwebClient, getContract, prepareContractCall } from "thirdweb";
 import { inAppWallet } from "thirdweb/wallets";
-import { polygon } from "thirdweb/chains";
+import { polygon, arbitrum, optimism, base, sepolia } from "thirdweb/chains";
 import {
   initGA,
   trackPageView,
@@ -30,6 +30,10 @@ const clientId = import.meta.env.VITE_THIRDWEB_CLIENT_ID;
 const factoryAddress = import.meta.env.VITE_THIRDWEB_FACTORY_ADDRESS;
 
 const MINT_COOLDOWN = 8000; // 8 seconds
+
+// Chain selection from environment variable
+const NETWORK_MAP = { polygon, arbitrum, optimism, base, sepolia };
+const chain = NETWORK_MAP[import.meta.env.VITE_APP_NETWORK_NAME] || polygon;
 
 if (!clientId) {
   console.error("VITE_THIRDWEB_CLIENT_ID is not set in environment variables");
@@ -51,7 +55,7 @@ const supportedWallets = [
   inAppWallet({
     smartAccount: {
       factoryAddress: factoryAddress , // Unicorn factory address
-      chain: polygon,
+      chain: chain,
       gasless: true,
       sponsorGas: true,
     }
@@ -81,7 +85,7 @@ if (process.env.NODE_ENV === 'development') {
 
 const contract = getContract({
   client,
-  chain: polygon,
+  chain: chain,
   address: CONTRACT_ADDRESS || "",
 });
 
@@ -240,6 +244,15 @@ function App() {
           <Header />
           <MintingInterface shouldAutoConnect={shouldAutoConnect} />
         </div>
+        <footer className="text-center py-8 text-muted text-sm border-t border-default mt-8">
+          <p className="mb-2">
+            <Trans
+              i18nKey="footer.broughtToYouBy"
+              components={{ a: <a className="underline font-semibold hover:opacity-80" target="_blank" rel="noopener noreferrer" /> }}
+            />
+          </p>
+          <p><Trans i18nKey="footer.copyright" /></p>
+        </footer>
       </div>
     </ThirdwebProvider>
   );
@@ -254,12 +267,124 @@ function Header() {
       <h1 className="text-5xl font-bold text-base mb-4">
         {themeConfig.appEmoji} <br/>{t('header.title', { appName: themeConfig.appName })}
       </h1>
-      <p className="text-xl text-muted mb-2">
-        {t('header.description', { appName: themeConfig.appName, prizeAmount: themeConfig.prizeAmount })}
-      </p>
+      <p className="text-xl text-muted mb-2 text-left max-w-4xl mx-auto">
+        <Trans
+          i18nKey="header.description"
+          values={{ appName: themeConfig.appName, prizeAmount: themeConfig.prizeAmount }}
+          components={{ a: <a className="underline font-semibold hover:opacity-80" target="_blank" rel="noopener noreferrer" />, br: <br /> }}
+        />
+      </p><br/>
       <p className="text-sm text-primary mb-8">
         🔐 {t('header.accessNote', { platformName: themeConfig.platformName })} • {t('header.claimFree')}
       </p>
+      <NFTPreview />
+    </div>
+  );
+}
+
+function NFTPreview() {
+  const [nftImage, setNftImage] = useState(null);
+  const [isVideo, setIsVideo] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const { data: tokenURI } = useReadContract({
+    contract,
+    method: "function tokenURI(uint256 tokenId) view returns (string)",
+    params: [1n],
+  });
+
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      if (themeConfig.nftImage.url) {
+        setNftImage(themeConfig.nftImage.url);
+        setIsVideo(themeConfig.nftImage.isVideo);
+        setLoading(false);
+        return;
+      }
+
+      if (!tokenURI) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        let metadataUrl = tokenURI;
+
+        if (tokenURI.startsWith('ipfs://')) {
+          metadataUrl = tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/');
+        }
+
+        if (tokenURI.startsWith('data:application/json;base64,')) {
+          const base64Data = tokenURI.replace('data:application/json;base64,', '');
+          const metadata = JSON.parse(atob(base64Data));
+          processMetadata(metadata);
+          return;
+        }
+
+        if (tokenURI.startsWith('data:application/json,')) {
+          const metadata = JSON.parse(decodeURIComponent(tokenURI.replace('data:application/json,', '')));
+          processMetadata(metadata);
+          return;
+        }
+
+        const response = await fetch(metadataUrl);
+        const metadata = await response.json();
+        processMetadata(metadata);
+      } catch (error) {
+        console.error('Error fetching NFT metadata:', error);
+        setLoading(false);
+      }
+    };
+
+    const processMetadata = (metadata) => {
+      let imageUrl = metadata.image || metadata.image_url || metadata.animation_url;
+      if (imageUrl) {
+        if (imageUrl.startsWith('ipfs://')) {
+          imageUrl = imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+        }
+        const videoExtensions = ['.mp4', '.webm', '.mov'];
+        const isVideoFile = videoExtensions.some(ext => imageUrl.toLowerCase().includes(ext)) || metadata.animation_url;
+        setNftImage(imageUrl);
+        setIsVideo(isVideoFile);
+      }
+      setLoading(false);
+    };
+
+    fetchMetadata();
+  }, [tokenURI]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center mb-8">
+        <div className="w-64 h-64 rounded-xl bg-surface-muted border border-default animate-pulse flex items-center justify-center">
+          <span className="text-muted">Loading NFT...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!nftImage) return null;
+
+  return (
+    <div className="flex justify-center mb-8">
+      <div className="relative rounded-xl overflow-hidden shadow-lg border border-accent max-w-sm">
+        {isVideo ? (
+          <video
+            src={nftImage}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-auto max-h-80 object-contain bg-surface"
+          />
+        ) : (
+          <img
+            src={nftImage}
+            alt={themeConfig.nftImage.alt || 'NFT Preview'}
+            className="w-full h-auto max-h-80 object-contain bg-surface"
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -598,7 +723,11 @@ function MintingInterface({ shouldAutoConnect }) {
           <div className="text-center">
             <div className="border border-accent rounded-lg p-4 mb-4 bg-surface">
               <p className="text-primary">
-                {t('claim.alreadyClaimed', { appName: themeConfig.appName })} 🎉
+                <Trans
+                  i18nKey="claim.alreadyClaimed"
+                  values={{ appName: themeConfig.appName }}
+                  components={{ a: <a className="underline font-semibold hover:opacity-80" target="_blank" rel="noopener noreferrer" />, br: <br /> }}
+                /> 🎉
               </p>
             </div>
           </div>

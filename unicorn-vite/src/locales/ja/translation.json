@@ -1,8 +1,8 @@
 {
   "header": {
     "title": "{{appName}}を請求する",
-    "description": "下の「請求」をクリックして、{{appName}} NFTを受け取り、{{prizeAmount}}の抽選に参加しましょう。",
-    "accessNote": "{{platformName}}の既存メンバー限定",
+    "description": "下の「請求」をクリックして、{{appName}} NFTを受け取りましょう。<br/><br/>抽選に参加するには、このNFTを請求し、ETHDenverで使用したのと同じメールアドレスで<a href='https://app.arbitrum.ac?utm_source=raffle' target='_blank'>Arbitrum Accounts</a>に登録してください。<br/><br/>{{prizeAmount}}のグランプリと毎日のプレゼントに参加できます。<br/><br/>毎日のプレゼントはUnicorn.ethブースで午後12:55（MT）に行われます。当選するにはその場にいる必要があります。<br/><br/>グランプリの当選者にはメールで通知されます。",
+    "accessNote": "{{platformName}}の既存ユーザー限定",
     "claimFree": "無料で請求"
   },
   "connection": {
@@ -22,7 +22,7 @@
   },
   "claim": {
     "checkingStatus": "請求状況を確認中...",
-    "button": "NFTを請求",
+    "button": "請求",
     "claiming": "請求中...",
     "claimingYourPrize": "{{appName}}を請求中...",
     "success": "請求成功！",
@@ -58,7 +58,7 @@
   },
   "social": {
     "sharePrompt": "請求をシェア：",
-    "shareMessage": "{{url}}で無料の{{appName}}コレクティブルを請求し、{{prizeAmount}}の抽選に参加しました"
+    "shareMessage": "{{url}}で無料の{{appName}}コレクティブルを請求し、{{prizeAmount}}のプレゼントに参加しました"
   },
   "connectionStatus": {
     "connected": "接続済み",
@@ -75,5 +75,9 @@
     "es": "スペイン語",
     "zh": "中国語",
     "ja": "日本語"
+  },
+  "footer": {
+    "broughtToYouBy": "<a href='https://myunicornaccount.com'>Unicorn.eth</a>提供 — ETHDenver 2025・2026を支援。",
+    "copyright": "© 2026 Unicorns, Inc."
   }
 }

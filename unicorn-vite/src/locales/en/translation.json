@@ -1,8 +1,8 @@
 {
   "header": {
     "title": "Claim your {{appName}}",
-    "description": "Click \"Claim\" below to receive your {{appName}} NFT and be entered to win the {{prizeAmount}} raffle.",
-    "accessNote": "Existing {{platformName}} members only",
+    "description": "Click \"Claim\" below to receive your {{appName}} NFT.<br/><br/>To enter the raffle, claim this NFT and register with the same email you used for ETHDenver at <a href='https://app.arbitrum.ac?utm_source=raffle' target='_blank'>Arbitrum Accounts</a>.<br/><br/>You’ll be entered to win the {{prizeAmount}} grand prize and daily giveaways.<br/><br/>Daily giveaways happen at the Unicorn.eth booth at 12:55 PM MT. You must be present to win.<br/><br/>The grand prize winner will be notified by email.",
+    "accessNote": "Existing {{platformName}} users only",
     "claimFree": "Claim for free"
   },
   "connection": {
@@ -22,11 +22,12 @@
   },
   "claim": {
     "checkingStatus": "Checking claim status...",
-    "button": "Claim NFT",
+    "button": "Claim",
     "claiming": "Claiming...",
     "claimingYourPrize": "Claiming your {{appName}}...",
     "success": "Successfully claimed!",
-    "alreadyClaimed": "You have claimed your {{appName}}!",
+    "alreadyClaimed": "You have claimed your {{appName}}! 🎉 <br/> Be sure to register with the same email you used for ETHDenver at <a href='https://app.arbitrum.ac?utm_source=raffle' target='_blank'>Arbitrum Accounts</a> to qualify for the giveaways. 🎉",
+    "accessNote": "Existing {{platformName}} users only",
     "waitBeforeRetry": "Please wait before trying again",
     "accessDenied": "Access denied - unauthorized wallet",
     "ensureConnected": "Please ensure your wallet is connected",
@@ -75,5 +76,9 @@
     "es": "Spanish",
     "zh": "Chinese",
     "ja": "Japanese"
+  },
+  "footer": {
+    "broughtToYouBy": "Brought to you by <a href='https://myunicornaccount.com'>Unicorn.eth</a> powering ETHDenver 2025 and 2026.",
+    "copyright": "© 2026 Unicorns, Inc."
   }
 }
