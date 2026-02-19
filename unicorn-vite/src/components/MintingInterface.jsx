@@ -68,6 +68,25 @@ export default function MintingInterface({ shouldAutoConnect }) {
     method: "function paused() view returns (bool)",
   });
 
+  // Read mint price — contracts may expose it as mintPrice(), price(), or cost()
+  const { data: mintPrice } = useReadContract({
+    contract,
+    method: "function mintPrice() view returns (uint256)",
+  });
+
+  const { data: price } = useReadContract({
+    contract,
+    method: "function price() view returns (uint256)",
+  });
+
+  const { data: cost } = useReadContract({
+    contract,
+    method: "function cost() view returns (uint256)",
+  });
+
+  // Use whichever price function returns a value
+  const resolvedMintPrice = mintPrice ?? price ?? cost ?? 0n;
+
   const { mutate: sendTransaction, isPending: isMinting } = useSendTransaction();
 
   // Authorization check
@@ -154,6 +173,7 @@ export default function MintingInterface({ shouldAutoConnect }) {
         contract,
         method: "function mint()",
         params: [],
+        value: resolvedMintPrice,
       });
 
       sendTransaction(transaction, {
@@ -166,7 +186,7 @@ export default function MintingInterface({ shouldAutoConnect }) {
           setTimeout(() => setMintStatus(""), 3000);
         },
         onError: (error) => {
-          console.error("Claiming failed:", error.code);
+          console.error("Claiming failed:", error?.message || error);
           setMintStatus(t('claim.transactionFailed'));
           if (themeConfig.features.analyticsEnabled) {
             trackNFTClaim(address, false, error.code || 'transaction_failed');
@@ -339,7 +359,7 @@ export default function MintingInterface({ shouldAutoConnect }) {
       {drawingDate && (
         <div className="border border-accent rounded-lg p-6 mb-8 bg-surface">
           <h3 className="text-xl font-bold text-primary mb-2 flex items-center">
-            ⏰ {t('drawing.title', { prizeAmount: themeConfig.prizeAmount, drawingName: 'Second PolyPrize Drawing' })}
+            ⏰ {t('drawing.title', { prizeAmount: themeConfig.prizeAmount, drawingName: 'Giveaway Drawing' })}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

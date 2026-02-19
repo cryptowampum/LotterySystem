@@ -3,12 +3,13 @@
 
 export const themeConfig = {
   // App Branding - can be overridden via environment variables
-  appName: import.meta.env.VITE_APP_NAME || 'PolyPrize',
+  drawingName: import.meta.env.VITE_DRAWING_NAME || 'Unicorn Lottery',
+  appName: import.meta.env.VITE_APP_NAME || 'Unicorn Lottery',
   appEmoji: import.meta.env.VITE_APP_EMOJI || '🦄',
   platformName: import.meta.env.VITE_PLATFORM_NAME || 'unicorn.eth',
-  platformUrl: import.meta.env.VITE_PLATFORM_URL || 'https://polygon.ac',
+  platformUrl: import.meta.env.VITE_PLATFORM_URL || 'https://app.arbitrum.ac',
   prizeAmount: import.meta.env.VITE_PRIZE_AMOUNT,
-  shareUrl: import.meta.env.VITE_SHARE_URL || 'https://app.polygon.ac',
+  shareUrl: import.meta.env.VITE_SHARE_URL || 'https://app.arbitrum.ac',
   additionalInstructions: import.meta.env.VITE_ADDITIONAL_INSTRUCTIONS || '',
   // NFT Image (supports static images, GIFs, and videos)
   nftImage: {
