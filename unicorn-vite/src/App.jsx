@@ -7,6 +7,7 @@ import { themeConfig } from './config/theme.config';
 import { initGA, trackPageView, trackWalletConnection } from './utils/analytics';
 import Header from './components/Header';
 import MintingInterface from './components/MintingInterface';
+import { Analytics } from "@vercel/analytics/react";
 import './index.css';
 
 // Lazy-load non-critical UI controls
@@ -92,6 +93,7 @@ function App() {
           <p><Trans i18nKey="footer.copyright" /></p>
         </footer>
       </div>
+      <Analytics />
     </ThirdwebProvider>
   );
 }

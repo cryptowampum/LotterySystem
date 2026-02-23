@@ -1,14 +1,15 @@
-# Unicorn.eth PolyPrize Collection - Implementation Reference
+# Unicorn.eth Lottery - Implementation Reference
 
 ## Project Overview
-A **production-ready soul-bound NFT claiming dapp** for the Unicorn.eth PolyPrize Collection lottery system. **Vite React app** using **ThirdWeb v5**, deployed on **Polygon mainnet** with **gasless transactions**. Optimized for conference mobile performance with unreliable WiFi.
+A **production-ready soul-bound NFT claiming dapp** for the Unicorn.eth Lottery system. **Vite React app** using **ThirdWeb v5**, deployed on **Arbitrum** (configurable) with **paid or gasless minting**. Optimized for conference mobile performance with unreliable WiFi.
 
 ## Production Status
 
-- **Deployment**: https://app.polygon.ac (Vercel)
-- **Network**: Polygon mainnet (Chain ID: 137), configurable via env
-- **Contract**: ERC721 soul-bound, 10,000 max supply
+- **Deployment**: https://app.arbitrum.ac (Vercel)
+- **Network**: Arbitrum (Chain ID: 42161), configurable via env
+- **Contract**: ERC721 soul-bound with mint price
 - **Factory**: `0xD771615c873ba5a2149D5312448cE01D677Ee48A`
+- **Version**: `GET /version.json` — auto-generated from package.json
 
 ## Technical Stack
 
@@ -18,7 +19,7 @@ A **production-ready soul-bound NFT claiming dapp** for the Unicorn.eth PolyPriz
 | Web3 | ThirdWeb v5 (single `thirdweb` package) |
 | Styling | Tailwind CSS 3.4 |
 | i18n | i18next + HTTP backend (English bundled, es/zh/ja lazy-loaded) |
-| Analytics | Google Analytics 4 (react-ga4) |
+| Analytics | Google Analytics 4 (react-ga4) + Vercel Analytics (@vercel/analytics) |
 | Hosting | Vercel with cache headers |
 
 ## Architecture
@@ -26,13 +27,13 @@ A **production-ready soul-bound NFT claiming dapp** for the Unicorn.eth PolyPriz
 ### File Structure
 ```
 src/
-├── App.jsx                    # Root: ThirdwebProvider, AutoConnect, lazy TopBar
+├── App.jsx                    # Root: ThirdwebProvider, AutoConnect, lazy TopBar, Vercel Analytics
 ├── main.jsx                   # Entry: StrictMode, ThemeProvider
 ├── i18n.js                    # English bundled, others via i18next-http-backend
 ├── index.css                  # Tailwind + CSS custom properties for theming
 ├── components/
 │   ├── Header.jsx             # Title, description, NFTPreview (eager)
-│   ├── MintingInterface.jsx   # Claiming logic + wallet cache (eager)
+│   ├── MintingInterface.jsx   # Claiming logic + wallet cache + mint price detection (eager)
 │   ├── NFTPreview.jsx         # NFT image with localStorage cache (eager)
 │   ├── TopBar.jsx             # LanguageSelector + ThemeToggle (lazy)
 │   ├── LanguageSelector.jsx   # 4-language dropdown
@@ -50,10 +51,11 @@ src/
 
 public/
 ├── sw.js                      # Service worker: cache-first static, network-first API
+├── version.json               # Auto-generated: { service, version } (gitignored)
 └── locales/{es,zh,ja}/        # Lazy-loaded translation files
 
 index.html                     # Loading skeleton, preconnect hints, SW registration
-vite.config.js                 # manualChunks splitting + gzip/brotli compression
+vite.config.js                 # manualChunks splitting, gzip/brotli compression, version.json generation
 vercel.json                    # Cache headers (immutable assets, 24h locales, no-cache SW)
 ```
 
@@ -76,6 +78,22 @@ URL params check
 | `checking` | URL params, no cache | Loading spinner |
 | `authorized` | AutoConnect succeeds | Claim interface |
 | `unauthorized` | 15s timeout | No Wallet Found |
+
+## Mint Price Detection
+
+MintingInterface reads three common price functions from the contract:
+```javascript
+const { data: mintPrice } = useReadContract({ contract, method: "function mintPrice() view returns (uint256)" });
+const { data: price }     = useReadContract({ contract, method: "function price() view returns (uint256)" });
+const { data: cost }      = useReadContract({ contract, method: "function cost() view returns (uint256)" });
+
+const resolvedMintPrice = mintPrice ?? price ?? cost ?? 0n;
+
+// Passed as value in prepareContractCall
+prepareContractCall({ contract, method: "function mint()", params: [], value: resolvedMintPrice });
+```
+
+If all three return nothing, the mint is sent with zero value (free/gasless).
 
 ## Mobile Performance Optimizations
 
@@ -108,6 +126,20 @@ All pre-compressed with gzip + brotli via `vite-plugin-compression2`.
 - Skeleton auto-hides via `#root:not(:empty)` CSS selector when React mounts
 - Service worker registered on `window.load` (doesn't block paint)
 
+## Analytics
+
+### Google Analytics 4
+Configured via `VITE_GA_MEASUREMENT_ID`. Tracks: page views, wallet connections, authorization checks, NFT claims, social shares, drawing countdown views.
+
+### Vercel Analytics
+`<Analytics />` from `@vercel/analytics/react` in `App.jsx`. Automatic page views + Web Vitals. Data appears in Vercel dashboard Analytics tab. No configuration needed.
+
+## Version Endpoint
+
+`GET /version.json` returns `{ "service": "unicorn-vite", "version": "1.0.1" }`.
+
+Generated by `vite.config.js` from `package.json` on every build/dev startup. The `__APP_VERSION__` global constant is available in app code. The file is gitignored (`**/public/version.json`).
+
 ## ThirdWeb v5 Requirements
 
 ```javascript
@@ -115,7 +147,7 @@ All pre-compressed with gzip + brotli via `vite-plugin-compression2`.
 import { createThirdwebClient, getContract, prepareContractCall } from "thirdweb";
 import { ThirdwebProvider, useActiveAccount, useReadContract } from "thirdweb/react";
 import { inAppWallet } from "thirdweb/wallets";
-import { polygon } from "thirdweb/chains";
+import { arbitrum } from "thirdweb/chains";
 
 // Contract calls MUST use explicit function signatures
 const { data } = useReadContract({
@@ -127,6 +159,9 @@ const { data } = useReadContract({
 const wallets = [inAppWallet({
   smartAccount: { factoryAddress, chain, gasless: true, sponsorGas: true }
 })];
+
+// Paid mint — pass value from resolved price
+prepareContractCall({ contract, method: "function mint()", params: [], value: resolvedMintPrice });
 ```
 
 ## Environment Variables
@@ -139,24 +174,31 @@ All prefixed with `VITE_` (Vite requirement).
 | `VITE_THIRDWEB_FACTORY_ADDRESS` | Yes | — |
 | `VITE_CONTRACT_ADDRESS` | Yes | — |
 | `VITE_APP_NETWORK_NAME` | No | `polygon` |
-| `VITE_APP_NAME` | No | `PolyPrize` |
+| `VITE_APP_NAME` | No | `Unicorn Lottery` |
+| `VITE_DRAWING_NAME` | No | `Unicorn Lottery` |
 | `VITE_APP_EMOJI` | No | `🦄` |
 | `VITE_PLATFORM_NAME` | No | `unicorn.eth` |
+| `VITE_PLATFORM_URL` | No | `https://app.arbitrum.ac` |
 | `VITE_PRIZE_AMOUNT` | No | — |
-| `VITE_SHARE_URL` | No | `https://app.polygon.ac` |
+| `VITE_SHARE_URL` | No | `https://app.arbitrum.ac` |
 | `VITE_NFT_IMAGE_URL` | No | Falls back to on-chain tokenURI |
-| `VITE_GA_MEASUREMENT_ID` | No | Disables analytics |
+| `VITE_GA_MEASUREMENT_ID` | No | Disables GA4 |
 
 ## Smart Contract Interface
 
 ```solidity
 // User functions
-function mint() external                              // Gasless, one per wallet
+function mint() external payable                      // May require payment (auto-detected)
 function hasMinted(address) view returns (bool)
 function totalSupply() view returns (uint256)
 
+// Price functions (auto-detected — whichever exists)
+function mintPrice() view returns (uint256)
+function price() view returns (uint256)
+function cost() view returns (uint256)
+
 // View functions
-function MAX_SUPPLY() view returns (uint256)           // 10,000
+function MAX_SUPPLY() view returns (uint256)
 function drawingDate() view returns (uint256)           // Unix timestamp
 function isMintingActive() view returns (bool)
 function paused() view returns (bool)
@@ -182,6 +224,7 @@ function withdrawETH()
 npm run build
 # Confirm: multiple chunks, app entry < 1 KB, no errors
 # Confirm: .gz and .br files generated for all assets
+# Confirm: dist/version.json exists with correct version
 ```
 
 ## Critical Lessons
@@ -191,6 +234,8 @@ npm run build
 3. **Conference WiFi**: Cache everything possible, skeleton for instant paint, service worker for offline
 4. **Wallet cache**: XOR obfuscation is appropriate for public addresses — prevents casual reading without crypto overhead
 5. **i18n**: Bundle only the fallback language, lazy-load the rest
+6. **Paid mint**: Always read the contract's price function and pass `value` — `InsufficientPayment` revert means a price is required
+7. **Version endpoint**: Auto-generate `public/version.json` from `package.json` in vite config — gitignore it
 
 ---
 

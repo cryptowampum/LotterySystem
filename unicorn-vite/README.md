@@ -1,14 +1,14 @@
-# PolyPrize Claiming DApp
+# Unicorn Lottery Claiming DApp
 
-A React application for claiming exclusive soul-bound NFTs, built for polygon.ac community members with existing smart wallets. Optimized for mobile performance at conferences with unreliable WiFi.
+A React application for claiming exclusive soul-bound NFTs, built for unicorn.eth community members with existing smart wallets. Optimized for mobile performance at conferences with unreliable WiFi.
 
 ## Overview
 
-This decentralized application (dapp) allows authorized users to claim PolyPrize NFTs on the Polygon blockchain. The NFTs are soul-bound (non-transferable) and serve as both collectibles and raffle entries for a prize drawing.
+This decentralized application (dapp) allows authorized users to claim Unicorn Lottery NFTs on EVM-compatible blockchains. The NFTs are soul-bound (non-transferable) and serve as both collectibles and raffle entries for prize drawings.
 
 ### Key Features
 
-- **Gasless Claiming**: Users pay no transaction fees thanks to account abstraction
+- **Paid or Gasless Minting**: Supports contracts with a mint price (auto-detected via `mintPrice()`, `price()`, or `cost()`) as well as gasless claiming via account abstraction
 - **Soul-Bound NFTs**: Tokens cannot be transferred, ensuring fair lottery participation
 - **Smart Wallet Integration**: Works exclusively with pre-issued Thirdweb smart accounts
 - **Social Sharing**: Built-in sharing to LinkedIn, Twitter, Farcaster, and Bluesky
@@ -17,28 +17,30 @@ This decentralized application (dapp) allows authorized users to claim PolyPrize
 - **Internationalization**: English (bundled), Spanish, Chinese, Japanese (lazy-loaded)
 - **Offline Support**: Service worker caches static assets for unreliable connectivity
 - **Instant Load**: HTML loading skeleton renders before any JavaScript executes
+- **Dual Analytics**: Google Analytics 4 + Vercel Analytics
+- **Version Endpoint**: `GET /version.json` reports current build version
 
 ## Technology Stack
 
 - **Frontend**: React 19 with Vite 7
 - **Web3**: Thirdweb v5 SDK
-- **Blockchain**: Polygon mainnet (configurable)
+- **Blockchain**: Configurable (Arbitrum, Polygon, Optimism, Base, Sepolia)
 - **Styling**: Tailwind CSS
-- **Analytics**: Google Analytics 4
+- **Analytics**: Google Analytics 4 + Vercel Analytics
 - **i18n**: i18next with HTTP backend for lazy loading
 - **Deployment**: Vercel
 
 ## Smart Contract Details
 
 - **Type**: ERC721 with soul-bound restrictions
-- **Max Supply**: 10,000
+- **Max Supply**: Configurable per contract
 - **Factory Address**: `0xD771615c873ba5a2149D5312448cE01D677Ee48A`
 - **Network**: Configurable via `VITE_APP_NETWORK_NAME` (polygon, arbitrum, optimism, base, sepolia)
 
 ## Prerequisites
 
 ### For Users
-- Must have a pre-existing smart wallet issued by polygon.ac/unicorn.eth
+- Must have a pre-existing smart wallet issued by unicorn.eth
 - Wallet must be created from the authorized factory address
 - Access through authorized dapp domains only
 
@@ -69,15 +71,16 @@ VITE_THIRDWEB_FACTORY_ADDRESS=0xD771615c873ba5a2149D5312448cE01D677Ee48A
 VITE_CONTRACT_ADDRESS=YOUR_CONTRACT_ADDRESS
 
 # Network (polygon, arbitrum, optimism, base, sepolia)
-VITE_APP_NETWORK_NAME=polygon
+VITE_APP_NETWORK_NAME=arbitrum
 
 # Branding (all optional, have defaults)
-VITE_APP_NAME=PolyPrize
+VITE_APP_NAME=Unicorn Lottery
+VITE_DRAWING_NAME=Unicorn Lottery
 VITE_APP_EMOJI=🦄
 VITE_PLATFORM_NAME=unicorn.eth
-VITE_PLATFORM_URL=https://polygon.ac
+VITE_PLATFORM_URL=https://app.arbitrum.ac
 VITE_PRIZE_AMOUNT=$100
-VITE_SHARE_URL=https://app.polygon.ac
+VITE_SHARE_URL=https://app.arbitrum.ac
 
 # NFT Preview (optional — falls back to on-chain tokenURI)
 VITE_NFT_IMAGE_URL=
@@ -108,19 +111,20 @@ npm run lint      # Run ESLint
 unicorn-vite/
 ├── public/
 │   ├── sw.js                          # Service worker (cache-first static, network-first API)
+│   ├── version.json                   # Auto-generated version endpoint (gitignored)
 │   ├── locales/
 │   │   ├── es/translation.json        # Spanish (lazy-loaded)
 │   │   ├── zh/translation.json        # Chinese (lazy-loaded)
 │   │   └── ja/translation.json        # Japanese (lazy-loaded)
 │   └── unicorn-logo*.{jpg,png}        # Favicons
 ├── src/
-│   ├── App.jsx                        # Root component with ThirdwebProvider + AutoConnect
+│   ├── App.jsx                        # Root: ThirdwebProvider, AutoConnect, Vercel Analytics
 │   ├── main.jsx                       # React entry point
 │   ├── i18n.js                        # i18next config (English bundled, others via HTTP backend)
 │   ├── index.css                      # Tailwind + CSS custom properties
 │   ├── components/
 │   │   ├── Header.jsx                 # App header with title + NFT preview
-│   │   ├── MintingInterface.jsx       # Core claiming UI + wallet cache integration
+│   │   ├── MintingInterface.jsx       # Core claiming UI + wallet cache + mint price detection
 │   │   ├── NFTPreview.jsx             # NFT image/video with localStorage cache
 │   │   ├── TopBar.jsx                 # Language selector + theme toggle (lazy-loaded)
 │   │   ├── LanguageSelector.jsx       # Language dropdown
@@ -136,11 +140,21 @@ unicorn-vite/
 │       ├── walletCache.js             # Wallet session cache (XOR + base64, 24h TTL)
 │       └── nftCache.js                # NFT metadata cache (localStorage, 7-day TTL)
 ├── index.html                         # Loading skeleton, preconnect hints, SW registration
-├── vite.config.js                     # Bundle splitting + gzip/brotli compression
+├── vite.config.js                     # Bundle splitting, compression, version.json generation
 ├── vercel.json                        # Cache headers + SPA rewrites
 ├── tailwind.config.js
 └── package.json
 ```
+
+## Mint Price Detection
+
+The contract may require payment to mint. MintingInterface auto-detects the price by reading three common function signatures:
+
+- `mintPrice() view returns (uint256)`
+- `price() view returns (uint256)`
+- `cost() view returns (uint256)`
+
+Whichever returns a value is used as the `value` parameter in the mint transaction. If none return a value, the mint is sent with zero value (gasless/free).
 
 ## Mobile Performance Optimizations
 
@@ -174,6 +188,23 @@ All chunks are pre-compressed with gzip and brotli via `vite-plugin-compression2
 - Manual toggle persisted in localStorage
 - Loading skeleton also supports dark mode via inline CSS media query
 
+## Analytics
+
+### Google Analytics 4
+Tracks page views, wallet connections, authorization checks, NFT claims, social shares, and drawing countdown views. Configured via `VITE_GA_MEASUREMENT_ID`.
+
+### Vercel Analytics
+Automatic page view and Web Vitals tracking via `@vercel/analytics`. Data appears in the Vercel dashboard Analytics tab once deployed. No configuration needed.
+
+## Version Endpoint
+
+`GET /version.json` returns:
+```json
+{ "service": "unicorn-vite", "version": "1.0.1" }
+```
+
+Generated automatically by `vite.config.js` from `package.json` on every build and dev startup. The `__APP_VERSION__` global constant is also available in app code.
+
 ## Architecture
 
 ### Authorization System
@@ -205,9 +236,14 @@ const { data: hasMinted } = useReadContract({
 ## Smart Contract Functions
 
 ### User Functions
-- `mint()`: Claim one NFT per wallet (before drawing date, gasless)
+- `mint()`: Claim one NFT per wallet (may require payment — auto-detected)
 - `hasMinted(address)`: Check if address has claimed
 - `totalSupply()`: Current number of minted NFTs
+
+### Price Functions (auto-detected)
+- `mintPrice()`: Returns mint price in wei
+- `price()`: Alternative price function
+- `cost()`: Alternative price function
 
 ### Admin Functions
 - `pause()`/`unpause()`: Emergency stop mechanism
@@ -215,7 +251,7 @@ const { data: hasMinted } = useReadContract({
 - `updateBaseURI(string)`: Change NFT metadata URI
 
 ### View Functions
-- `MAX_SUPPLY()`: Returns 10,000
+- `MAX_SUPPLY()`: Max token supply
 - `drawingDate()`: Unix timestamp of raffle drawing
 - `isMintingActive()`: Whether claiming is currently allowed
 - `paused()`: Contract pause status
@@ -234,6 +270,7 @@ const { data: hasMinted } = useReadContract({
 ### Verification Checklist
 
 - [ ] `npm run build` succeeds with no single chunk > 500 KB (excluding thirdweb-react)
+- [ ] `dist/version.json` exists with correct version
 - [ ] Loading skeleton appears immediately on page load (before JS)
 - [ ] Skeleton disappears when React mounts
 - [ ] Dark mode skeleton matches system preference
@@ -242,6 +279,7 @@ const { data: hasMinted } = useReadContract({
 - [ ] Network tab (Slow 3G): chunks load in parallel
 - [ ] Service worker registers after page load
 - [ ] Non-English browser: translation loads on demand from `/locales/`
+- [ ] Vercel Analytics appears in dashboard after deploy
 - [ ] Test on actual phone at conference WiFi
 
 ## Security
@@ -260,6 +298,10 @@ const { data: hasMinted } = useReadContract({
 - Check ThirdWeb client ID permissions in dashboard
 - Ensure environment variables are set
 
+**InsufficientPayment Error on Mint**:
+- The contract requires payment. Check that `mintPrice()`, `price()`, or `cost()` is returning a value
+- Verify the user's wallet has sufficient native token balance on the target chain
+
 **Slow Load on Conference WiFi**:
 - Service worker should cache assets after first visit
 - Check DevTools > Application > Service Workers for registration status
@@ -272,8 +314,8 @@ const { data: hasMinted } = useReadContract({
 
 ## License
 
-This project is proprietary software for polygon.ac community use.
+This project is proprietary software for unicorn.eth community use.
 
 ---
 
-**Built with Thirdweb v5, React 19, Vite 7, Tailwind CSS, and deployed on Vercel**
+**Built with Thirdweb v5, React 19, Vite 7, Tailwind CSS, Vercel Analytics, and deployed on Vercel**
