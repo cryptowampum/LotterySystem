@@ -31,7 +31,9 @@
     "waitBeforeRetry": "Please wait before trying again",
     "accessDenied": "Access denied - unauthorized wallet",
     "ensureConnected": "Please ensure your wallet is connected",
-    "transactionFailed": "Transaction failed. Please try again."
+    "transactionFailed": "Transaction failed. Please try again.",
+    "thresholdNotMet": "Minimum {{threshold}} On-Chain Activities Required",
+    "thresholdDescription": "Your wallet has {{current}} total activities (transactions + tokens + NFTs). You need at least {{threshold}} to claim."
   },
   "errors": {
     "noWallet": "No Existing Wallet Found",

@@ -14,6 +14,8 @@ import {
   trackDrawingInfo,
 } from '../utils/analytics';
 import { cacheWalletSession, getCachedWalletSession, clearWalletCache } from '../utils/walletCache';
+import useWalletActivity from '../hooks/useWalletActivity';
+import WalletActivityWidget from './WalletActivityWidget';
 
 const SocialShareButton = lazy(() => import('./SocialShareButton'));
 
@@ -25,6 +27,23 @@ export default function MintingInterface({ shouldAutoConnect }) {
   const address = account?.address;
   // Wallet cache: check for cached address on mount
   const cachedAddress = getCachedWalletSession();
+
+  // ENS name from querystring (?ENS=something.eth)
+  const ensName = new URLSearchParams(window.location.search).get('ENS') || '';
+
+  // Wallet activity widget (default to enabled if config property missing)
+  const widgetEnabled = themeConfig.walletActivityEnabled ?? true;
+  const threshold = themeConfig.transactionThreshold ?? 0;
+  const { activity, loading: activityLoading } = useWalletActivity(widgetEnabled ? address : null);
+  const totalActivity = activity ? activity.transactions + activity.erc20 + activity.nft : 0;
+
+  // Threshold gating: allow mint if no threshold set, widget disabled, still loading, or meets threshold
+  const meetsThreshold = (() => {
+    if (!widgetEnabled || threshold <= 0) return true;  // No gating
+    if (activityLoading) return true;                    // Don't block while loading
+    if (!activity) return true;                          // API failed — don't block
+    return totalActivity >= threshold;                   // Check combined activity
+  })();
 
   const [isAuthorizedUnicornWallet, setIsAuthorizedUnicornWallet] = useState(false);
   const [connectionState, setConnectionState] = useState(() => {
@@ -278,6 +297,16 @@ export default function MintingInterface({ shouldAutoConnect }) {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Wallet Activity Widget — always visible when connected */}
+      {widgetEnabled && address && (
+        <WalletActivityWidget
+          activity={activity}
+          loading={activityLoading}
+          address={address}
+          ensName={ensName}
+        />
+      )}
+
       {/* Claiming Section */}
       <div className="bg-surface-muted rounded-lg p-8 mb-8 border border-default">
         {checkingMinted ? (
@@ -338,13 +367,25 @@ export default function MintingInterface({ shouldAutoConnect }) {
           </div>
         ) : (
           <div className="text-center">
-            <button
-              onClick={handleMint}
-              disabled={isMinting || isPaused || !isAuthorizedUnicornWallet}
-              className="text-white font-semibold py-4 px-8 rounded-lg text-xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed hover:opacity-90 bg-primary"
-            >
-              {isMinting ? t('claim.claiming') : `${themeConfig.appEmoji} ${t('claim.button')}`}
-            </button>
+            {/* Threshold gating */}
+            {!meetsThreshold ? (
+              <div className="bg-warning-bg border border-warning-border rounded-lg p-6 mb-4">
+                <h3 className="text-xl font-semibold text-warning mb-2">
+                  {t('claim.thresholdNotMet', { threshold })}
+                </h3>
+                <p className="text-warning">
+                  {t('claim.thresholdDescription', { current: totalActivity, threshold })}
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={handleMint}
+                disabled={isMinting || isPaused || !isAuthorizedUnicornWallet}
+                className="text-white font-semibold py-4 px-8 rounded-lg text-xl transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed hover:opacity-90 bg-primary"
+              >
+                {isMinting ? t('claim.claiming') : `${themeConfig.appEmoji} ${t('claim.button')}`}
+              </button>
+            )}
 
             {mintStatus && (
               <div className="mt-4 p-3 rounded-lg border border-accent bg-surface">
@@ -422,6 +463,7 @@ export default function MintingInterface({ shouldAutoConnect }) {
         {account ? (
           <div className="text-primary">
             <p className="font-semibold">✅ {t('connectionStatus.connected')}</p>
+            {ensName && <p className="text-sm text-primary font-semibold">{ensName}</p>}
             <p className="text-sm text-muted">
               {account.address?.slice(0,6)}...{account.address?.slice(-4)}
             </p>

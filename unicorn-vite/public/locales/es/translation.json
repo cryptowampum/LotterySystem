@@ -30,7 +30,9 @@
     "waitBeforeRetry": "Por favor espera antes de intentar de nuevo",
     "accessDenied": "Acceso denegado - billetera no autorizada",
     "ensureConnected": "Por favor asegúrate de que tu billetera esté conectada",
-    "transactionFailed": "Transacción fallida. Por favor intenta de nuevo."
+    "transactionFailed": "Transacción fallida. Por favor intenta de nuevo.",
+    "thresholdNotMet": "Se requieren mínimo {{threshold}} actividades en cadena",
+    "thresholdDescription": "Tu billetera tiene {{current}} actividades totales (transacciones + tokens + NFTs). Necesitas al menos {{threshold}} para reclamar."
   },
   "errors": {
     "noWallet": "No se encontró billetera existente",

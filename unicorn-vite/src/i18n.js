@@ -15,8 +15,10 @@ i18n
       en: { translation: en },
     },
     partialBundledLanguages: true,
+    lng: 'en', // Default to English
     fallbackLng: 'en',
     supportedLngs: ['en', 'es', 'zh', 'ja'],
+    initImmediate: false, // Synchronous init for bundled languages
     interpolation: {
       escapeValue: false, // React already escapes
     },
@@ -24,8 +26,7 @@ i18n
       loadPath: '/locales/{{lng}}/translation.json',
     },
     detection: {
-      order: ['querystring', 'localStorage', 'navigator'],
-      lookupQuerystring: 'lang',
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     },
   });

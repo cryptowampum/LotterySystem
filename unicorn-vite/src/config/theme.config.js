@@ -79,6 +79,10 @@ export const themeConfig = {
     }
   },
 
+  // Wallet activity widget
+  walletActivityEnabled: import.meta.env.VITE_WALLET_ACTIVITY_ENABLED !== 'false',
+  transactionThreshold: parseInt(import.meta.env.VITE_TRANSACTION_THRESHOLD, 10) || 0,
+
   // Feature flags
   features: {
     darkModeEnabled: true,

@@ -30,7 +30,9 @@
     "waitBeforeRetry": "再試行する前にお待ちください",
     "accessDenied": "アクセス拒否 - 未承認のウォレット",
     "ensureConnected": "ウォレットが接続されていることを確認してください",
-    "transactionFailed": "トランザクション失敗。もう一度お試しください。"
+    "transactionFailed": "トランザクション失敗。もう一度お試しください。",
+    "thresholdNotMet": "最低{{threshold}}件のオンチェーン活動が必要です",
+    "thresholdDescription": "ウォレットの総活動数は{{current}}件です（トランザクション + トークン + NFT）。請求するには{{threshold}}件以上必要です。"
   },
   "errors": {
     "noWallet": "既存のウォレットが見つかりません",

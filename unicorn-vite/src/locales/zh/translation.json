@@ -30,7 +30,9 @@
     "waitBeforeRetry": "请稍候再试",
     "accessDenied": "访问被拒绝 - 未授权的钱包",
     "ensureConnected": "请确保您的钱包已连接",
-    "transactionFailed": "交易失败。请重试。"
+    "transactionFailed": "交易失败。请重试。",
+    "thresholdNotMet": "最少需要 {{threshold}} 次链上活动",
+    "thresholdDescription": "您的钱包有 {{current}} 次总活动（交易 + 代币 + NFT）。您至少需要 {{threshold}} 次才能领取。"
   },
   "errors": {
     "noWallet": "未找到现有钱包",
