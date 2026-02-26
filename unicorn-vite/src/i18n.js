@@ -1,29 +1,32 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import HttpBackend from 'i18next-http-backend';
 
+// English is statically bundled (fallback language, instant load)
 import en from './locales/en/translation.json';
-import es from './locales/es/translation.json';
-import zh from './locales/zh/translation.json';
-import ja from './locales/ja/translation.json';
 
 i18n
+  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
       en: { translation: en },
-      es: { translation: es },
-      zh: { translation: zh },
-      ja: { translation: ja },
     },
+    partialBundledLanguages: true,
+    lng: 'en', // Default to English
     fallbackLng: 'en',
+    supportedLngs: ['en', 'es', 'zh', 'ja'],
+    initImmediate: false, // Synchronous init for bundled languages
     interpolation: {
       escapeValue: false, // React already escapes
     },
+    backend: {
+      loadPath: '/locales/{{lng}}/translation.json',
+    },
     detection: {
-      order: ['querystring', 'localStorage', 'navigator'],
-      lookupQuerystring: 'lang',
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage'],
     },
   });

@@ -2,15 +2,118 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-  
-    <link rel="icon" type="iimage/jpeg" sizes="32x32" href="/unicorn-logo32x32.jpg" />
+
+    <link rel="icon" type="image/jpeg" sizes="32x32" href="/unicorn-logo32x32.jpg" />
     <link rel="icon" type="image/png" sizes="72x72" href="/unicorn-logo72x72.png" />
-    <link rel="icon" type="image/jpeg" sizes="16x16"  href="/unicorn-logo16x16.jpg" />    
+    <link rel="icon" type="image/jpeg" sizes="16x16"  href="/unicorn-logo16x16.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Claim Your PolyPrize from <U>Unicorn.eth</U></title>
+    <title>Claim Your NFT from Unicorn.eth</title>
+
+    <!-- Preconnect to critical third-party origins -->
+    <link rel="preconnect" href="https://embedded-wallet.thirdweb.com" crossorigin />
+    <link rel="preconnect" href="https://rpc.thirdweb.com" crossorigin />
+    <link rel="preconnect" href="https://ipfs.io" crossorigin />
+
+    <!-- Inline critical CSS for loading skeleton -->
+    <style>
+      /* Skeleton styles — rendered before any JS loads */
+      .skeleton-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+        background-color: #FFFFFF;
+        color: #1F2937;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .skeleton-loading {
+          background-color: #111827;
+          color: #F9FAFB;
+        }
+        .skeleton-loading .skeleton-nft {
+          background-color: #1F2937;
+          border-color: #374151;
+        }
+        .skeleton-loading .skeleton-btn {
+          background-color: #374151;
+        }
+        .skeleton-loading .skeleton-text {
+          background-color: #374151;
+        }
+      }
+
+      .skeleton-loading .skeleton-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1.5rem;
+        text-align: center;
+      }
+
+      .skeleton-loading .skeleton-nft {
+        width: 16rem;
+        height: 16rem;
+        border-radius: 0.75rem;
+        background-color: #F3F4F6;
+        border: 1px solid #E5E7EB;
+        margin-bottom: 2rem;
+        animation: skeleton-pulse 2s ease-in-out infinite;
+      }
+
+      .skeleton-loading .skeleton-text {
+        height: 1rem;
+        border-radius: 0.25rem;
+        background-color: #F3F4F6;
+        margin-bottom: 0.75rem;
+        animation: skeleton-pulse 2s ease-in-out infinite;
+      }
+
+      .skeleton-loading .skeleton-btn {
+        width: 14rem;
+        height: 3.5rem;
+        border-radius: 0.5rem;
+        background-color: #E5E7EB;
+        margin-top: 1.5rem;
+        animation: skeleton-pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes skeleton-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      /* Auto-hide skeleton when React mounts content into #root */
+      #root:not(:empty) + .skeleton-loading,
+      #root:not(:empty) ~ .skeleton-loading {
+        display: none;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+
+    <!-- Loading skeleton — visible instantly, hidden when React mounts -->
+    <div class="skeleton-loading" aria-hidden="true">
+      <div class="skeleton-title">&#x1F984; Unicorn Award</div>
+      <div class="skeleton-nft"></div>
+      <div class="skeleton-text" style="width: 80%; max-width: 24rem;"></div>
+      <div class="skeleton-text" style="width: 60%; max-width: 18rem;"></div>
+      <div class="skeleton-btn"></div>
+    </div>
+
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Register service worker after page load -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>

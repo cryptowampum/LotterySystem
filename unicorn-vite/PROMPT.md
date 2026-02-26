@@ -1,408 +1,243 @@
-# 🦄 Unicorn.eth PolyPrize Collection - Complete Working Implementation
+# Unicorn.eth Lottery - Implementation Reference
 
 ## Project Overview
-A **production-ready soul-bound NFT claiming dapp** for the Unicorn.eth PolyPrize Collection lottery system. This is a **Vite React app** using **ThirdWeb v5** that deploys on **Polygon mainnet** with **gasless transactions**.
+A **production-ready soul-bound NFT claiming dapp** for the Unicorn.eth Lottery system. **Vite React app** using **ThirdWeb v5**, deployed on **Arbitrum** (configurable) with **paid or gasless minting**. Optimized for conference mobile performance with unreliable WiFi.
 
-## ✅ FULLY WORKING STATUS - PRODUCTION DEPLOYED
+## Production Status
 
-### **Successfully Implemented & Tested:**
-- ✅ **ThirdWeb v5 Integration**: Complete working implementation with correct API usage
-- ✅ **Contract Integration**: Live contract calls working with explicit function signatures
-- ✅ **Vite Development Environment**: No webpack polyfill issues
-- ✅ **Conditional AutoConnect**: Only attempts connection with proper URL parameters
-- ✅ **Authorization System**: Restricted to unicorn.eth embedded wallets only
-- ✅ **UI/UX**: Clean white background with purple (#A83DCC) branding
-- ✅ **Soul-Bound NFT Contract**: Production-ready contract deployed on Polygon
-- ✅ **Real Contract Data**: Shows live supply, drawing date, claim status
-- ✅ **Gasless Transactions**: Account abstraction configured for sponsored gas
-- ✅ **Claiming Functionality**: Full end-to-end NFT claiming process
-- ✅ **Google Analytics**: Complete event tracking for user behavior
-- ✅ **Social Sharing**: LinkedIn, Twitter, Farcaster, Bluesky integration
-- ✅ **Vercel Deployment**: Successfully deployed with proper configuration
+- **Deployment**: https://app.arbitrum.ac (Vercel)
+- **Network**: Arbitrum (Chain ID: 42161), configurable via env
+- **Contract**: ERC721 soul-bound with mint price
+- **Factory**: `0xD771615c873ba5a2149D5312448cE01D677Ee48A`
+- **Version**: `GET /version.json` — auto-generated from package.json
 
-### **Current Live Data:**
-- **Contract Address**: 0x228287e8793D7F1a193C9fbA579D91c7A6159176
-- **Current Supply**: 3+ NFTs minted out of 10,000
-- **Drawing Date**: Configurable via smart contract
-- **Prize Amount**: $100 raffle
-- **Status**: Active (isMintingActive: true, isPaused: false)
-- **Network**: Polygon mainnet (Chain ID: 137)
-- **Deployment**: https://app.polygon.ac
+## Technical Stack
 
-## 🔧 Final Technical Implementation
+| Layer | Technology |
+|---|---|
+| Framework | Vite 7 + React 19 |
+| Web3 | ThirdWeb v5 (single `thirdweb` package) |
+| Styling | Tailwind CSS 3.4 |
+| i18n | i18next + HTTP backend (English bundled, es/zh/ja lazy-loaded) |
+| Analytics | Google Analytics 4 (react-ga4) + Vercel Analytics (@vercel/analytics) |
+| Hosting | Vercel with cache headers |
 
-### **Build System (Working):**
-- **Framework**: Vite React (NOT Create React App)
-- **ThirdWeb Version**: v5 (single package: `thirdweb`)
-- **Styling**: Tailwind CSS v3.4.0
-- **Analytics**: Google Analytics 4 (react-ga4)
-- **File Structure**: `.jsx` files, imports from `'./index.css'`
-- **Project Root**: `./unicorn-vite`
+## Architecture
 
-### **Critical ThirdWeb v5 Requirements (Learned & Implemented):**
+### File Structure
+```
+src/
+├── App.jsx                    # Root: ThirdwebProvider, AutoConnect, lazy TopBar, Vercel Analytics
+├── main.jsx                   # Entry: StrictMode, ThemeProvider
+├── i18n.js                    # English bundled, others via i18next-http-backend
+├── index.css                  # Tailwind + CSS custom properties for theming
+├── components/
+│   ├── Header.jsx             # Title, description, NFTPreview (eager)
+│   ├── MintingInterface.jsx   # Claiming logic + wallet cache + mint price detection (eager)
+│   ├── NFTPreview.jsx         # NFT image with localStorage cache (eager)
+│   ├── TopBar.jsx             # LanguageSelector + ThemeToggle (lazy)
+│   ├── LanguageSelector.jsx   # 4-language dropdown
+│   ├── ThemeToggle.jsx        # Dark/light toggle
+│   └── SocialShareButton.jsx  # Platform share buttons (lazy)
+├── config/
+│   ├── thirdweb.config.js     # Client, chain, wallets, contract exports
+│   └── theme.config.js        # Branding, colors, feature flags (env-driven)
+├── contexts/
+│   └── ThemeContext.jsx        # Dark mode with system preference detection
+└── utils/
+    ├── analytics.js           # GA4 event tracking
+    ├── walletCache.js         # XOR+base64 obfuscated wallet session (24h TTL)
+    └── nftCache.js            # NFT metadata cache (7-day TTL)
+
+public/
+├── sw.js                      # Service worker: cache-first static, network-first API
+├── version.json               # Auto-generated: { service, version } (gitignored)
+└── locales/{es,zh,ja}/        # Lazy-loaded translation files
+
+index.html                     # Loading skeleton, preconnect hints, SW registration
+vite.config.js                 # manualChunks splitting, gzip/brotli compression, version.json generation
+vercel.json                    # Cache headers (immutable assets, 24h locales, no-cache SW)
+```
+
+### Authorization Flow
+```
+URL params check
+  ├── No params → "Access Required" screen
+  └── walletId=inApp&authCookie=... OR autoConnect=true
+       ├── Cached wallet? → Show cached address + "Reconnecting..."
+       └── No cache → "Looking for Wallet..." spinner
+            ├── AutoConnect success → "authorized", cache wallet
+            └── 15s timeout → "unauthorized", clear cache
+```
+
+### Connection States
+| State | Trigger | UI |
+|---|---|---|
+| `no_autoconnect` | No URL params | Access Required instructions |
+| `cached_reconnecting` | Has cached wallet + URL params | Cached address shown, reconnecting indicator |
+| `checking` | URL params, no cache | Loading spinner |
+| `authorized` | AutoConnect succeeds | Claim interface |
+| `unauthorized` | 15s timeout | No Wallet Found |
+
+## Mint Price Detection
+
+MintingInterface reads three common price functions from the contract:
 ```javascript
-// ✅ Correct package installation
-npm install thirdweb --legacy-peer-deps
-npm install react-ga4
+const { data: mintPrice } = useReadContract({ contract, method: "function mintPrice() view returns (uint256)" });
+const { data: price }     = useReadContract({ contract, method: "function price() view returns (uint256)" });
+const { data: cost }      = useReadContract({ contract, method: "function cost() view returns (uint256)" });
 
-// ✅ Correct imports
-import { ... } from "thirdweb/react";
-import { polygon } from "thirdweb/chains";
+const resolvedMintPrice = mintPrice ?? price ?? cost ?? 0n;
 
-// ✅ Contract calls MUST use explicit function signatures
-const { data: totalSupply } = useReadContract({
+// Passed as value in prepareContractCall
+prepareContractCall({ contract, method: "function mint()", params: [], value: resolvedMintPrice });
+```
+
+If all three return nothing, the mint is sent with zero value (free/gasless).
+
+## Mobile Performance Optimizations
+
+### Bundle Splitting (vite.config.js)
+```
+react-vendor      ~12 KB    React + ReactDOM
+thirdweb-core     ~404 KB   ThirdWeb SDK core
+thirdweb-react    ~1,278 KB ThirdWeb React UI components
+i18n-vendor       ~63 KB    i18next ecosystem
+analytics         ~13 KB    react-ga4
+App entry         ~300 B    Wiring only
+```
+All pre-compressed with gzip + brotli via `vite-plugin-compression2`.
+
+### Caching Layers
+| Layer | Strategy | TTL |
+|---|---|---|
+| Wallet session | localStorage, XOR+base64 obfuscated | 24 hours |
+| NFT metadata | localStorage, plaintext JSON | 7 days |
+| Static assets | Service worker, cache-first | Until SW version change |
+| API/RPC calls | Service worker, network-first + cache fallback | Per response |
+| Vite assets | HTTP `Cache-Control: immutable` | 1 year |
+| Locales | HTTP `Cache-Control: public` | 24 hours |
+| SW itself | HTTP `Cache-Control: no-cache` | Always fresh |
+
+### Zero-JS First Paint (index.html)
+- Inline CSS + branded skeleton (title, pulsing NFT placeholder, disabled button)
+- `prefers-color-scheme: dark` support in inline CSS
+- `<link rel="preconnect">` for ThirdWeb and IPFS origins
+- Skeleton auto-hides via `#root:not(:empty)` CSS selector when React mounts
+- Service worker registered on `window.load` (doesn't block paint)
+
+## Analytics
+
+### Google Analytics 4
+Configured via `VITE_GA_MEASUREMENT_ID`. Tracks: page views, wallet connections, authorization checks, NFT claims, social shares, drawing countdown views.
+
+### Vercel Analytics
+`<Analytics />` from `@vercel/analytics/react` in `App.jsx`. Automatic page views + Web Vitals. Data appears in Vercel dashboard Analytics tab. No configuration needed.
+
+## Version Endpoint
+
+`GET /version.json` returns `{ "service": "unicorn-vite", "version": "1.0.1" }`.
+
+Generated by `vite.config.js` from `package.json` on every build/dev startup. The `__APP_VERSION__` global constant is available in app code. The file is gitignored (`**/public/version.json`).
+
+## ThirdWeb v5 Requirements
+
+```javascript
+// Correct imports — always from sub-paths
+import { createThirdwebClient, getContract, prepareContractCall } from "thirdweb";
+import { ThirdwebProvider, useActiveAccount, useReadContract } from "thirdweb/react";
+import { inAppWallet } from "thirdweb/wallets";
+import { arbitrum } from "thirdweb/chains";
+
+// Contract calls MUST use explicit function signatures
+const { data } = useReadContract({
   contract,
-  method: "function totalSupply() view returns (uint256)", // Required format
+  method: "function totalSupply() view returns (uint256)", // NOT just "totalSupply"
 });
 
-// ❌ This doesn't work in ThirdWeb v5
-method: "totalSupply" // Simple method names fail
+// Gas sponsorship via smartAccount config, NOT manual calls
+const wallets = [inAppWallet({
+  smartAccount: { factoryAddress, chain, gasless: true, sponsorGas: true }
+})];
+
+// Paid mint — pass value from resolved price
+prepareContractCall({ contract, method: "function mint()", params: [], value: resolvedMintPrice });
 ```
 
-### **Conditional AutoConnect Implementation (NEW):**
-```javascript
-// Check URL parameters to determine if AutoConnect should run
-useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const walletId = urlParams.get('walletId');
-  const authCookie = urlParams.get('authCookie');
-  const autoConnect = urlParams.get('autoConnect');
-  
-  // Only enable AutoConnect if proper parameters are present
-  const hasAutoConnectParams = (
-    (walletId === 'inApp' && authCookie) || 
-    (autoConnect === 'true')
-  );
-  
-  setShouldAutoConnect(hasAutoConnectParams);
-}, []);
+## Environment Variables
 
-// Conditionally render AutoConnect
-{shouldAutoConnect && (
-  <AutoConnect 
-    client={client} 
-    wallets={supportedWallets}
-    timeout={15000}
-  />
-)}
-```
+All prefixed with `VITE_` (Vite requirement).
 
-**Benefits:**
-- ✅ No unnecessary connection attempts
-- ✅ Better security (only connects with proper authorization)
-- ✅ Clearer user messaging for unauthorized access
-- ✅ Reduced API calls to ThirdWeb
+| Variable | Required | Default |
+|---|---|---|
+| `VITE_THIRDWEB_CLIENT_ID` | Yes | — |
+| `VITE_THIRDWEB_FACTORY_ADDRESS` | Yes | — |
+| `VITE_CONTRACT_ADDRESS` | Yes | — |
+| `VITE_APP_NETWORK_NAME` | No | `polygon` |
+| `VITE_APP_NAME` | No | `Unicorn Lottery` |
+| `VITE_DRAWING_NAME` | No | `Unicorn Lottery` |
+| `VITE_APP_EMOJI` | No | `🦄` |
+| `VITE_PLATFORM_NAME` | No | `unicorn.eth` |
+| `VITE_PLATFORM_URL` | No | `https://app.arbitrum.ac` |
+| `VITE_PRIZE_AMOUNT` | No | — |
+| `VITE_SHARE_URL` | No | `https://app.arbitrum.ac` |
+| `VITE_NFT_IMAGE_URL` | No | Falls back to on-chain tokenURI |
+| `VITE_GA_MEASUREMENT_ID` | No | Disables GA4 |
 
-### **Gas Sponsorship Implementation (Correct v5 Approach):**
-```javascript
-// ✅ Correct gas sponsorship via account abstraction
-const supportedWallets = [
-  inAppWallet({
-    smartAccount: {
-      factoryAddress: factoryAddress,
-      chain: polygon,
-      gasless: true,
-      sponsorGas: true,
-    }
-  })
-];
+## Smart Contract Interface
 
-// ❌ No manual sponsorship calls needed/available
-// sponsorTransaction() does not exist in ThirdWeb v5
-```
-
-### **Authorization System (Finalized):**
-**Simplified model:** If AutoConnect successfully connects an account, they're authorized (because only wallets from our factory can connect via the specific URL parameters).
-
-```javascript
-// Authorization is now binary and simple
-const isAuthorizedWallet = true; // If account exists, they're authorized
-
-// Three possible states:
-// 1. "checking" - AutoConnect is attempting connection
-// 2. "no_autoconnect" - No URL parameters, show access required message
-// 3. "authorized" - Account connected successfully
-```
-
-## 🎨 Design & Styling (Production)
-
-### **Color Scheme:**
-- **Background**: White (`#FFFFFF`)
-- **Primary Purple**: `#A83DCC` (buttons, accents)
-- **Light Purple**: `#FBE9FB` (status backgrounds, info boxes)
-- **Text**: Dark gray/black for readability
-- **Status Colors**: Green (success), Red (error), Yellow (warning), Orange (info)
-
-### **UI Components:**
-- **Header**: Large unicorn emoji, clear title, prize amount ($100)
-- **Loading State**: Animated purple progress bar
-- **Claim Button**: Purple with hover effect
-- **Status Messages**: Light purple backgrounds with dark text
-- **Social Buttons**: Purple with platform icons
-- **Connection Status**: Compact display at bottom
-
-## 📊 Google Analytics Integration (Working)
-
-### **Tracked Events:**
-```javascript
-// Page views
-trackPageView('/');
-
-// Wallet events
-trackWalletConnection(address, success);
-trackAuthorizationCheck(authorized, walletType);
-
-// NFT claiming
-trackNFTClaim(address, success, error);
-
-// Social sharing
-trackSocialShare(platform); // LinkedIn, Twitter, Farcaster, Bluesky
-
-// Drawing info
-trackDrawingInfo(daysRemaining);
-```
-
-### **Setup:**
-1. Create GA4 property at analytics.google.com
-2. Get Measurement ID (format: `G-XXXXXXXXXX`)
-3. Add to `.env`: `VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX`
-4. Analytics utility handles all tracking automatically
-
-## 🌐 Environment Configuration (Production)
-
-### **Required Environment Variables:**
-```env
-# Thirdweb Configuration
-VITE_THIRDWEB_CLIENT_ID=08bcaef53c604c9fed6a96d7f1e52624
-VITE_THIRDWEB_FACTORY_ADDRESS=0xD771615c873ba5a2149D5312448cE01D677Ee48A
-
-# Smart Contract
-VITE_CONTRACT_ADDRESS=0x228287e8793D7F1a193C9fbA579D91c7A6159176
-
-# Analytics (Optional)
-VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
-```
-
-### **Vercel Configuration:**
-**Root Directory**: `unicorn-vite`
-**Build Command**: `npm run build`
-**Output Directory**: `dist`
-**Install Command**: `npm install --legacy-peer-deps`
-
-### **vercel.json (Simplified):**
-```json
-{
-  "framework": "vite",
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm install --legacy-peer-deps"
-}
-```
-
-## 🎯 Smart Contract (Production Ready)
-
-### **Contract Features (All Working):**
 ```solidity
-contract PolyPrizeUnicorn is ERC721Base, Ownable, Pausable {
-  uint256 public constant MAX_SUPPLY = 10000;
-  uint256 public drawingDate; // Configurable timestamp
-  mapping(address => bool) public hasMinted;
-  mapping(uint256 => address) public minters;
-  
-  // Core functions:
-  function mint() external beforeDrawing whenNotPaused
-  function hasMinted(address) view returns (bool)
-  function totalSupply() view returns (uint256)
-  function MAX_SUPPLY() view returns (uint256)
-  function drawingDate() view returns (uint256)
-  function isMintingActive() view returns (bool)
-  function paused() view returns (bool)
-}
+// User functions
+function mint() external payable                      // May require payment (auto-detected)
+function hasMinted(address) view returns (bool)
+function totalSupply() view returns (uint256)
+
+// Price functions (auto-detected — whichever exists)
+function mintPrice() view returns (uint256)
+function price() view returns (uint256)
+function cost() view returns (uint256)
+
+// View functions
+function MAX_SUPPLY() view returns (uint256)
+function drawingDate() view returns (uint256)           // Unix timestamp
+function isMintingActive() view returns (bool)
+function paused() view returns (bool)
+function tokenURI(uint256) view returns (string)
+
+// Admin functions
+function pause() / unpause()
+function setDrawingDate(uint256)                       // Can only increase
+function updateBaseURI(string)
+function withdrawETH()
 ```
 
-### **Admin Functions:**
-- `pause()` / `unpause()` - Emergency stops
-- `setDrawingDate(uint256)` - Extend deadline (can only increase)
-- `updateBaseURI(string)` - Change NFT metadata
-- `withdrawETH()` - Withdraw contract balance
+## Deployment
 
-## 🔐 Security Features (Implemented)
+### Vercel Config (vercel.json)
+- Build: `npm run build` → `dist/`
+- Install: `npm install --legacy-peer-deps`
+- SPA: `/(.*) → /index.html`
+- Cache: `/assets/*` immutable 1yr, `/locales/*` 24h, `/sw.js` no-cache
 
-### **Authorization Security:**
-- ✅ **Conditional AutoConnect**: Only attempts connection with proper URL parameters
-- ✅ **Factory Validation**: Wallets must be from authorized factory
-- ✅ **URL Parameter Validation**: Requires specific autoconnect parameters
-- ✅ **Clear Access Messaging**: Unauthorized users see helpful instructions
-
-### **Transaction Security:**
-- ✅ **Rate Limiting**: 8-second cooldown between mint attempts
-- ✅ **Input Validation**: Address format validation
-- ✅ **Error Sanitization**: Generic error messages (no information leakage)
-- ✅ **Gas Sponsorship**: Automatic via account abstraction
-
-### **Soul-Bound Enforcement:**
-- ✅ **Transfers Blocked**: Except to burn address (0x0)
-- ✅ **Approvals Disabled**: Completely blocked
-- ✅ **One Mint Per Wallet**: Via hasMinted mapping
-- ✅ **Automatic Cutoff**: At drawing date
-
-### **Production Logging:**
-- ✅ **Development Only**: Detailed logs only in dev mode
-- ✅ **Error Codes**: Logged for debugging (not full messages)
-- ✅ **No Sensitive Data**: Client IDs partially hidden
-
-## 📱 User Experience States
-
-### **1. No AutoConnect Parameters (Direct Access)**
-```
-URL: https://app.polygon.ac
-State: "no_autoconnect"
-Display: "Access Required" message with instructions
-```
-
-### **2. Valid AutoConnect Parameters**
-```
-URL: https://app.polygon.ac?walletId=inApp&authCookie=...
-State: "checking" → "authorized"
-Display: Loading animation → Claim interface
-```
-
-### **3. Connection Timeout**
-```
-After 15 seconds without connection
-State: "unauthorized"
-Display: "No Existing Wallet Found" with signup link
-```
-
-### **4. Successful Connection**
-```
-State: "authorized"
-Display: Claim button or "Already Claimed" message
-```
-
-## 🚀 Deployment Process (Proven)
-
-### **1. Repository Setup:**
+### Build Verification
 ```bash
-cd unicorn-vite
-git add .
-git commit -m "Deploy: PolyPrize claiming dapp"
-git push origin main
+npm run build
+# Confirm: multiple chunks, app entry < 1 KB, no errors
+# Confirm: .gz and .br files generated for all assets
+# Confirm: dist/version.json exists with correct version
 ```
 
-### **2. Vercel Dashboard:**
-- Import GitHub repository
-- Set Root Directory: `unicorn-vite`
-- Configure environment variables
-- Deploy
+## Critical Lessons
 
-### **3. Post-Deployment:**
-- Test AutoConnect with valid URL parameters
-- Test direct access (should show "Access Required")
-- Verify gas sponsorship is working
-- Check Google Analytics is tracking
-- Test social sharing links
-
-## 📋 Testing Checklist
-
-### **Local Testing:**
-- [ ] `npm run dev` starts successfully
-- [ ] AutoConnect works with URL parameters
-- [ ] Direct access shows "Access Required"
-- [ ] Contract data loads correctly
-- [ ] Claim button functions (with authorized wallet)
-- [ ] Social sharing opens correct URLs
-- [ ] Analytics tracking fires events
-
-### **Production Testing:**
-- [ ] Deployed URL loads correctly
-- [ ] Environment variables are set
-- [ ] AutoConnect works from polygon.ac portal
-- [ ] Direct access is properly blocked
-- [ ] Gas sponsorship functions
-- [ ] Real NFT claims succeed
-- [ ] Analytics dashboard shows events
-
-## 🎊 Current Status: PRODUCTION DEPLOYED
-
-The **Unicorn.eth PolyPrize Collection** is now:
-- ✅ **Deployed on Vercel** at https://app.polygon.ac
-- ✅ **Fully functional** with conditional AutoConnect
-- ✅ **Google Analytics** tracking all user interactions
-- ✅ **Styled professionally** with white background and purple branding
-- ✅ **Secured properly** with URL parameter validation
-- ✅ **Integrated with polygon.ac** portal for authorized access
-- ✅ **Ready for $100 raffle** distribution
-
-## 🔄 Recent Updates
-
-### **October 2024 Changes:**
-- Changed raffle amount from $200 to $100
-- Updated unauthorized message with polygon.ac signup link
-- Added eligibility note: "If you claimed after Oct 1, 2025, you are eligible for the second raffle"
-- Implemented conditional AutoConnect (only with URL parameters)
-- Added "Access Required" screen for direct access attempts
-- Improved security by preventing unnecessary connection attempts
-
-## 📚 Key Files & Structure
-
-```
-unicorn-vite/
-├── public/
-│   ├── index.html (with favicon links)
-│   └── unicorn-logo16x16.jpg
-├── src/
-│   ├── App.jsx (main application logic)
-│   ├── index.css (Tailwind styles)
-│   ├── main.jsx (React entry point)
-│   └── utils/
-│       └── analytics.js (GA4 tracking)
-├── .env (environment variables)
-├── package.json
-├── vite.config.js
-├── tailwind.config.js
-├── PROMPT.md (this file)
-└── README.md (public documentation)
-```
-
-## 🚨 Critical Lessons Learned
-
-### **ThirdWeb v5:**
-1. Always use explicit function signatures in contract calls
-2. Gas sponsorship via `accountAbstraction` config, not manual functions
-3. Import from `thirdweb/react`, never `@thirdweb-dev/*`
-4. Use `--legacy-peer-deps` for npm install
-
-### **Vite:**
-1. Environment variables must have `VITE_` prefix
-2. Much better than Create React App for ThirdWeb v5
-3. No webpack polyfill issues
-
-### **Authorization:**
-1. Conditional AutoConnect prevents unnecessary attempts
-2. URL parameters are the source of truth
-3. Simple binary authorization (connected = authorized)
-4. Clear messaging for unauthorized users improves UX
-
-### **Deployment:**
-1. Set Root Directory to `unicorn-vite` in Vercel
-2. Remove `functions` config from vercel.json (not needed)
-3. Test both authorized and unauthorized access paths
-4. Verify environment variables in Vercel dashboard
-
-## 💡 Future Enhancements (Optional)
-
-- [ ] Admin dashboard for contract management
-- [ ] Winner selection interface
-- [ ] Email notifications for winners
-- [ ] Multi-language support
-- [ ] Enhanced analytics dashboard
-- [ ] Automated winner announcement on social media
+1. **ThirdWeb v5**: Always explicit function signatures, always `--legacy-peer-deps`, imports from `thirdweb/*` sub-paths
+2. **Vite**: `VITE_` prefix for env vars, `import.meta.env.DEV` not `process.env.NODE_ENV`
+3. **Conference WiFi**: Cache everything possible, skeleton for instant paint, service worker for offline
+4. **Wallet cache**: XOR obfuscation is appropriate for public addresses — prevents casual reading without crypto overhead
+5. **i18n**: Bundle only the fallback language, lazy-load the rest
+6. **Paid mint**: Always read the contract's price function and pass `value` — `InsufficientPayment` revert means a price is required
+7. **Version endpoint**: Auto-generate `public/version.json` from `package.json` in vite config — gitignore it
 
 ---
 
-**Built successfully with ThirdWeb v5, Vite, React, Tailwind CSS, Google Analytics 4, and deployed on Vercel**
-
-**Production URL**: https://app.polygon.ac
-**Last Updated**: October 2024
-**Status**: ✅ Fully Operational
+**Last Updated**: February 2026
+**Status**: Production — optimized for ETHDenver 2026

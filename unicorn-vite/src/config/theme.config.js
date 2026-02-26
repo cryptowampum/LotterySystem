@@ -3,16 +3,24 @@
 
 export const themeConfig = {
   // App Branding - can be overridden via environment variables
-  appName: import.meta.env.VITE_APP_NAME || 'PolyPrize',
+  drawingName: import.meta.env.VITE_DRAWING_NAME || 'Unicorn Lottery',
+  appName: import.meta.env.VITE_APP_NAME || 'Unicorn Lottery',
   appEmoji: import.meta.env.VITE_APP_EMOJI || '🦄',
-  platformName: import.meta.env.VITE_PLATFORM_NAME || 'polygon.ac',
-  platformUrl: import.meta.env.VITE_PLATFORM_URL || 'https://polygon.ac',
-  prizeAmount: import.meta.env.VITE_PRIZE_AMOUNT || '$100',
-  shareUrl: import.meta.env.VITE_SHARE_URL || 'https://app.polygon.ac',
+  platformName: import.meta.env.VITE_PLATFORM_NAME || 'unicorn.eth',
+  platformUrl: import.meta.env.VITE_PLATFORM_URL || 'https://app.arbitrum.ac',
+  prizeAmount: import.meta.env.VITE_PRIZE_AMOUNT,
+  shareUrl: import.meta.env.VITE_SHARE_URL || 'https://app.arbitrum.ac',
+  additionalInstructions: import.meta.env.VITE_ADDITIONAL_INSTRUCTIONS || '',
+  // NFT Image (supports static images, GIFs, and videos)
+  nftImage: {
+    url: import.meta.env.VITE_NFT_IMAGE_URL || '',
+    alt: import.meta.env.VITE_NFT_IMAGE_ALT || 'NFT Preview',
+    isVideo: import.meta.env.VITE_NFT_IMAGE_IS_VIDEO === 'true',
+  },
 
   // Social handles for sharing
   social: {
-    twitter: import.meta.env.VITE_TWITTER_HANDLE || '@MyUnicornAcct @0xPolygon',
+    twitter: import.meta.env.VITE_TWITTER_HANDLE || '@MyUnicornAcct',
     farcaster: import.meta.env.VITE_FARCASTER_HANDLE || '@unicornslfg',
     bluesky: import.meta.env.VITE_BLUESKY_HANDLE || '@myunicornaccount',
   },
@@ -70,6 +78,10 @@ export const themeConfig = {
       infoBorder: '#9A3412',     // Info border
     }
   },
+
+  // Wallet activity widget
+  walletActivityEnabled: import.meta.env.VITE_WALLET_ACTIVITY_ENABLED !== 'false',
+  transactionThreshold: parseInt(import.meta.env.VITE_TRANSACTION_THRESHOLD, 10) || 0,
 
   // Feature flags
   features: {
